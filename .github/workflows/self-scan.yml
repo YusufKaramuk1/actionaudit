@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  security-events: write
 
 jobs:
   self-audit:
@@ -23,4 +24,12 @@ jobs:
         run: pip install -e .
 
       - name: Scan our own workflows
-        run: actionaudit scan .github/workflows --fail-on medium
+        run: >
+          actionaudit scan .github/workflows
+          --format sarif --output actionaudit.sarif --fail-on medium
+
+      - name: Upload SARIF to Code Scanning
+        if: always()
+        uses: github/codeql-action/upload-sarif@v3
+        with:
+          sarif_file: actionaudit.sarif

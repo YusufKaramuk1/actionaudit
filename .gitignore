@@ -42,7 +42,7 @@ Thumbs.db
 # ActionAudit local scan outputs (avoid accidental commits)
 report.html
 report.json
-report.sarif
+*.sarif
 actionaudit-results.*
 
 # Claude Code (local session / settings — never commit)
