@@ -1,0 +1,14 @@
+name: Sample Workflow
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: single line
+        run: echo "hello world"
+      - name: multi line
+        run: |
+          echo "first line"
+          echo "title is ${{ github.event.pull_request.title }}"
+          echo "third line"
