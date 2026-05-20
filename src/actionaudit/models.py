@@ -65,3 +65,37 @@ class Finding:
     step_index: int | None = None
     snippet: str = ""
     confidence: str = "high"
+
+
+@dataclass
+class ScanReport:
+    """Aggregated result of scanning one or more workflow files."""
+
+    findings: list[Finding]
+    scanned_files: list[Path]
+    skipped: list[tuple[Path, str]]
+    duration_ms: int
+
+    @property
+    def total_count(self) -> int:
+        """Total number of findings."""
+        return len(self.findings)
+
+    def count(self, severity: Severity) -> int:
+        """Number of findings at the given severity."""
+        return sum(1 for finding in self.findings if finding.severity is severity)
+
+    @property
+    def overall_severity(self) -> Severity | None:
+        """The most severe finding's severity, or None when there are none."""
+        if not self.findings:
+            return None
+        return max((f.severity for f in self.findings), key=lambda s: s.rank)
+
+    @property
+    def findings_by_file(self) -> dict[Path, list[Finding]]:
+        """Findings grouped by workflow file, preserving discovery order."""
+        grouped: dict[Path, list[Finding]] = {}
+        for finding in self.findings:
+            grouped.setdefault(finding.workflow_path, []).append(finding)
+        return grouped
