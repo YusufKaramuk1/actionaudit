@@ -1,5 +1,6 @@
 """Tests for the command-line interface."""
 
+import json
 from pathlib import Path
 
 from click.testing import CliRunner
@@ -35,6 +36,20 @@ def test_explain_unknown_rule_exits_with_2() -> None:
 
 
 def test_scan_clean_directory_exits_0(tmp_path: Path) -> None:
-    # An empty directory yields no workflows and no findings.
     result = CliRunner().invoke(cli, ["scan", str(tmp_path)])
     assert result.exit_code == 0
+
+
+def test_scan_json_format(fixtures_dir: Path) -> None:
+    target = fixtures_dir / "vulnerable" / "hardcoded_secret.yml"
+    result = CliRunner().invoke(cli, ["scan", str(target), "--format", "json"])
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    assert payload["schema_version"] == "1.0"
+    assert payload["summary"]["total"] >= 1
+
+
+def test_scan_fail_on_triggers_exit_1(fixtures_dir: Path) -> None:
+    target = fixtures_dir / "vulnerable" / "hardcoded_secret.yml"
+    result = CliRunner().invoke(cli, ["scan", str(target), "--fail-on", "high"])
+    assert result.exit_code == 1
