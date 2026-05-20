@@ -6,6 +6,7 @@ from actionaudit.parser import parse_workflow
 from actionaudit.rules import get_all_rules
 from actionaudit.rules.expression_injection import ExpressionInjectionRule
 from actionaudit.rules.github_token_perms import GithubTokenPermissionsRule
+from actionaudit.rules.hardcoded_secret import HardcodedSecretRule
 from actionaudit.rules.pull_request_target import PullRequestTargetCheckoutRule
 from actionaudit.rules.unpinned_action import UnpinnedActionRule
 
@@ -16,6 +17,7 @@ def test_registry_discovers_all_rules() -> None:
     assert "pull-request-target-with-checkout" in rule_ids
     assert "github-token-write-all" in rule_ids
     assert "third-party-action-not-pinned-sha" in rule_ids
+    assert "hardcoded-secret" in rule_ids
 
 
 # --- expression-injection-in-run -------------------------------------------
@@ -125,3 +127,29 @@ def test_unpinned_action_ignores_safe_workflow(fixtures_dir: Path) -> None:
 def test_unpinned_action_survives_broken_yaml(fixtures_dir: Path) -> None:
     wf = parse_workflow(fixtures_dir / "broken.yml")
     assert UnpinnedActionRule().check(wf) == []
+
+
+# --- hardcoded-secret ------------------------------------------------------
+
+
+def test_hardcoded_secret_flags_vulnerable_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "vulnerable" / "hardcoded_secret.yml")
+    findings = HardcodedSecretRule().check(wf)
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.rule_id == "hardcoded-secret"
+    assert finding.severity.value == "HIGH"
+    # The AWS key literal is on line 11 of the fixture.
+    assert finding.line == 11
+    # The snippet must never echo the full secret.
+    assert "AKIAIOSFODNN7EXAMPLE" not in finding.snippet
+
+
+def test_hardcoded_secret_ignores_safe_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "safe" / "no_secret.yml")
+    assert HardcodedSecretRule().check(wf) == []
+
+
+def test_hardcoded_secret_survives_broken_yaml(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "broken.yml")
+    assert HardcodedSecretRule().check(wf) == []
