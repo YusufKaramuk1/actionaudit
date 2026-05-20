@@ -1,16 +1,24 @@
 """Command-line interface for actionaudit."""
 
 import sys
+from collections.abc import Callable
 from pathlib import Path
 
 import click
 from rich.console import Console
 
 from actionaudit import __version__
-from actionaudit.models import Severity
-from actionaudit.reporters import html, json_reporter, terminal
+from actionaudit.models import ScanReport, Severity
+from actionaudit.reporters import html, json_reporter, sarif, terminal
 from actionaudit.rules import get_all_rules
 from actionaudit.scanner import scan as run_scan
+
+# Renderers that produce a string (terminal writes to the console directly).
+_RENDERERS: dict[str, Callable[[ScanReport], str]] = {
+    "json": json_reporter.render,
+    "html": html.render,
+    "sarif": sarif.render,
+}
 
 
 @click.group(context_settings={"help_option_names": ["-h", "--help"]})
@@ -28,7 +36,7 @@ def cli() -> None:
 @click.option(
     "--format",
     "output_format",
-    type=click.Choice(["terminal", "json", "html"], case_sensitive=False),
+    type=click.Choice(["terminal", "json", "html", "sarif"], case_sensitive=False),
     default="terminal",
     help="Output format (default: terminal).",
 )
@@ -58,7 +66,7 @@ def scan(
     if fmt == "terminal":
         terminal.render(report)
     else:
-        rendered = json_reporter.render(report) if fmt == "json" else html.render(report)
+        rendered = _RENDERERS[fmt](report)
         if output_path is not None:
             output_path.write_text(rendered, encoding="utf-8")
             click.echo(f"{fmt.upper()} report written to {output_path}")

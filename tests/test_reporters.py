@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from actionaudit.models import ScanReport
-from actionaudit.reporters import html, json_reporter
+from actionaudit.reporters import html, json_reporter, sarif
 from actionaudit.scanner import scan
 
 # --- JSON reporter ---------------------------------------------------------
@@ -63,3 +63,35 @@ def test_html_reporter_empty_report() -> None:
     report = ScanReport(findings=[], scanned_files=[], skipped=[], duration_ms=0)
     out = html.render(report)
     assert "No findings" in out
+
+
+# --- SARIF reporter --------------------------------------------------------
+
+
+def test_sarif_reporter_produces_valid_sarif(fixtures_dir: Path) -> None:
+    report = scan(fixtures_dir / "vulnerable" / "expression_injection.yml")
+    payload = json.loads(sarif.render(report))
+    assert payload["version"] == "2.1.0"
+    run = payload["runs"][0]
+    assert run["tool"]["driver"]["name"] == "ActionAudit"
+    # Every rule must be described in the driver.
+    assert len(run["tool"]["driver"]["rules"]) == 6
+    assert len(run["results"]) == report.total_count
+
+
+def test_sarif_result_has_location_and_level(fixtures_dir: Path) -> None:
+    report = scan(fixtures_dir / "vulnerable" / "expression_injection.yml")
+    payload = json.loads(sarif.render(report))
+    result = payload["runs"][0]["results"][0]
+    assert result["ruleId"]
+    assert result["level"] in ("error", "warning", "note")
+    region = result["locations"][0]["physicalLocation"]["region"]
+    assert region["startLine"] >= 1
+    assert region["startColumn"] >= 1
+
+
+def test_sarif_empty_report() -> None:
+    report = ScanReport(findings=[], scanned_files=[], skipped=[], duration_ms=0)
+    payload = json.loads(sarif.render(report))
+    assert payload["runs"][0]["results"] == []
+    assert len(payload["runs"][0]["tool"]["driver"]["rules"]) == 6
