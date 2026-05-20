@@ -7,17 +7,21 @@ from actionaudit.rules import get_all_rules
 from actionaudit.rules.expression_injection import ExpressionInjectionRule
 from actionaudit.rules.github_token_perms import GithubTokenPermissionsRule
 from actionaudit.rules.hardcoded_secret import HardcodedSecretRule
+from actionaudit.rules.persist_credentials import PersistCredentialsRule
 from actionaudit.rules.pull_request_target import PullRequestTargetCheckoutRule
 from actionaudit.rules.unpinned_action import UnpinnedActionRule
 
 
 def test_registry_discovers_all_rules() -> None:
     rule_ids = {rule.rule_id for rule in get_all_rules()}
-    assert "expression-injection-in-run" in rule_ids
-    assert "pull-request-target-with-checkout" in rule_ids
-    assert "github-token-write-all" in rule_ids
-    assert "third-party-action-not-pinned-sha" in rule_ids
-    assert "hardcoded-secret" in rule_ids
+    assert rule_ids == {
+        "expression-injection-in-run",
+        "pull-request-target-with-checkout",
+        "github-token-write-all",
+        "third-party-action-not-pinned-sha",
+        "hardcoded-secret",
+        "persist-credentials-default-true",
+    }
 
 
 # --- expression-injection-in-run -------------------------------------------
@@ -153,3 +157,35 @@ def test_hardcoded_secret_ignores_safe_workflow(fixtures_dir: Path) -> None:
 def test_hardcoded_secret_survives_broken_yaml(fixtures_dir: Path) -> None:
     wf = parse_workflow(fixtures_dir / "broken.yml")
     assert HardcodedSecretRule().check(wf) == []
+
+
+# --- persist-credentials-default-true --------------------------------------
+
+
+def test_persist_credentials_flags_vulnerable_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "vulnerable" / "persist_credentials.yml")
+    findings = PersistCredentialsRule().check(wf)
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.rule_id == "persist-credentials-default-true"
+    assert finding.severity.value == "MEDIUM"
+    # The actions/checkout `uses:` is on line 10 of the fixture.
+    assert finding.line == 10
+    assert finding.confidence == "low"
+
+
+def test_persist_credentials_ignores_safe_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "safe" / "persist_credentials_safe.yml")
+    assert PersistCredentialsRule().check(wf) == []
+
+
+def test_persist_credentials_skips_without_token_use(fixtures_dir: Path) -> None:
+    # pinned_action.yml checks out code but never uses the token, so the
+    # heuristic should suppress the finding entirely.
+    wf = parse_workflow(fixtures_dir / "safe" / "pinned_action.yml")
+    assert PersistCredentialsRule().check(wf) == []
+
+
+def test_persist_credentials_survives_broken_yaml(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "broken.yml")
+    assert PersistCredentialsRule().check(wf) == []
