@@ -85,6 +85,25 @@ mypy src
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add a rule.
 
+## Türkçe özet
+
+ActionAudit, GitHub Actions iş akışlarındaki (`.github/workflows/*.yml`)
+güvenlik açıklarını ve hatalı yapılandırmaları statik olarak tespit eden,
+yerel çalışan, deterministik bir CLI tarayıcısıdır. Her bulgu; kesin konum
+(`workflow.yml:42`), önem derecesi, riskin *neden* tehlikeli olduğunun
+açıklaması ve *nasıl* düzeltileceği ile birlikte raporlanır.
+
+```bash
+git clone https://github.com/YusufKaramuk1/actionaudit.git
+cd actionaudit && pip install -e .
+actionaudit scan .
+```
+
+v0.1 altı kural içerir: ifade enjeksiyonu (expression injection), Pwn Request
+(`pull_request_target`), aşırı geniş `GITHUB_TOKEN` izinleri, SHA'ya
+sabitlenmemiş üçüncü parti action'lar, gömülü secret'lar ve `actions/checkout`
+kimlik bilgisi kalıcılığı. Çıktı biçimleri: terminal, JSON ve koyu temalı HTML.
+
 ## License
 
 MIT — see [LICENSE](LICENSE).
