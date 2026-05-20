@@ -75,7 +75,7 @@ def test_sarif_reporter_produces_valid_sarif(fixtures_dir: Path) -> None:
     run = payload["runs"][0]
     assert run["tool"]["driver"]["name"] == "ActionAudit"
     # Every rule must be described in the driver.
-    assert len(run["tool"]["driver"]["rules"]) == 6
+    assert len(run["tool"]["driver"]["rules"]) == 10
     assert len(run["results"]) == report.total_count
 
 
@@ -94,4 +94,4 @@ def test_sarif_empty_report() -> None:
     report = ScanReport(findings=[], scanned_files=[], skipped=[], duration_ms=0)
     payload = json.loads(sarif.render(report))
     assert payload["runs"][0]["results"] == []
-    assert len(payload["runs"][0]["tool"]["driver"]["rules"]) == 6
+    assert len(payload["runs"][0]["tool"]["driver"]["rules"]) == 10

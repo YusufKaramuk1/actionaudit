@@ -1,0 +1,10 @@
+name: Curl Pipe
+on: push
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: curl -fsSL https://example.com/install.sh | bash

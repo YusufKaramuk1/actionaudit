@@ -1,0 +1,10 @@
+name: Hosted Runner
+on: pull_request
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "build"

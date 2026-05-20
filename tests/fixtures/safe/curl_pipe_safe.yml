@@ -1,0 +1,13 @@
+name: Curl Safe
+on: push
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          curl -fsSL -o install.sh https://example.com/install.sh
+          echo "abc123  install.sh" | sha256sum -c
+          bash install.sh

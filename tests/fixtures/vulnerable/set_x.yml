@@ -1,0 +1,12 @@
+name: Set X
+on: push
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          set -x
+          deploy --token "$DEPLOY_TOKEN"

@@ -4,6 +4,18 @@ All notable changes to ActionAudit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- SARIF v2.1.0 reporter (`--format sarif`) for GitHub Code Scanning; the
+  self-scan workflow now uploads its results to Code Scanning.
+- Four additional security rules:
+  - `inline-curl-pipe-bash` (MEDIUM)
+  - `workflow-dispatch-input-injection` (HIGH)
+  - `bash-with-set-x` (LOW)
+  - `self-hosted-runner-fork-trigger` (MEDIUM)
+
 ## [0.1.0] - 2026-05-20
 
 ### Added

@@ -4,12 +4,16 @@ from pathlib import Path
 
 from actionaudit.parser import parse_workflow
 from actionaudit.rules import get_all_rules
+from actionaudit.rules.bash_set_x import BashSetXRule
 from actionaudit.rules.expression_injection import ExpressionInjectionRule
 from actionaudit.rules.github_token_perms import GithubTokenPermissionsRule
 from actionaudit.rules.hardcoded_secret import HardcodedSecretRule
+from actionaudit.rules.inline_curl_pipe import InlineCurlPipeRule
 from actionaudit.rules.persist_credentials import PersistCredentialsRule
 from actionaudit.rules.pull_request_target import PullRequestTargetCheckoutRule
+from actionaudit.rules.self_hosted_runner import SelfHostedRunnerRule
 from actionaudit.rules.unpinned_action import UnpinnedActionRule
+from actionaudit.rules.workflow_dispatch_input import WorkflowDispatchInputRule
 
 
 def test_registry_discovers_all_rules() -> None:
@@ -21,6 +25,10 @@ def test_registry_discovers_all_rules() -> None:
         "third-party-action-not-pinned-sha",
         "hardcoded-secret",
         "persist-credentials-default-true",
+        "inline-curl-pipe-bash",
+        "workflow-dispatch-input-injection",
+        "bash-with-set-x",
+        "self-hosted-runner-fork-trigger",
     }
 
 
@@ -189,3 +197,99 @@ def test_persist_credentials_skips_without_token_use(fixtures_dir: Path) -> None
 def test_persist_credentials_survives_broken_yaml(fixtures_dir: Path) -> None:
     wf = parse_workflow(fixtures_dir / "broken.yml")
     assert PersistCredentialsRule().check(wf) == []
+
+
+# --- inline-curl-pipe-bash -------------------------------------------------
+
+
+def test_curl_pipe_flags_vulnerable_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "vulnerable" / "curl_pipe.yml")
+    findings = InlineCurlPipeRule().check(wf)
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.rule_id == "inline-curl-pipe-bash"
+    assert finding.severity.value == "MEDIUM"
+    # The curl | bash command is on line 10 of the fixture.
+    assert finding.line == 10
+
+
+def test_curl_pipe_ignores_safe_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "safe" / "curl_pipe_safe.yml")
+    assert InlineCurlPipeRule().check(wf) == []
+
+
+def test_curl_pipe_survives_broken_yaml(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "broken.yml")
+    assert InlineCurlPipeRule().check(wf) == []
+
+
+# --- workflow-dispatch-input-injection -------------------------------------
+
+
+def test_dispatch_input_flags_vulnerable_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "vulnerable" / "dispatch_input.yml")
+    findings = WorkflowDispatchInputRule().check(wf)
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.rule_id == "workflow-dispatch-input-injection"
+    assert finding.severity.value == "HIGH"
+    # The `${{ inputs.target }}` use is on line 16 of the fixture.
+    assert finding.line == 16
+
+
+def test_dispatch_input_ignores_safe_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "safe" / "dispatch_input_safe.yml")
+    assert WorkflowDispatchInputRule().check(wf) == []
+
+
+def test_dispatch_input_survives_broken_yaml(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "broken.yml")
+    assert WorkflowDispatchInputRule().check(wf) == []
+
+
+# --- bash-with-set-x -------------------------------------------------------
+
+
+def test_set_x_flags_vulnerable_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "vulnerable" / "set_x.yml")
+    findings = BashSetXRule().check(wf)
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.rule_id == "bash-with-set-x"
+    assert finding.severity.value == "LOW"
+    # `set -x` is on line 11 of the fixture (inside a block scalar).
+    assert finding.line == 11
+
+
+def test_set_x_ignores_safe_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "safe" / "set_x_safe.yml")
+    assert BashSetXRule().check(wf) == []
+
+
+def test_set_x_survives_broken_yaml(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "broken.yml")
+    assert BashSetXRule().check(wf) == []
+
+
+# --- self-hosted-runner-fork-trigger ---------------------------------------
+
+
+def test_self_hosted_flags_vulnerable_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "vulnerable" / "self_hosted.yml")
+    findings = SelfHostedRunnerRule().check(wf)
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.rule_id == "self-hosted-runner-fork-trigger"
+    assert finding.severity.value == "MEDIUM"
+    # `runs-on: self-hosted` is on line 8 of the fixture.
+    assert finding.line == 8
+
+
+def test_self_hosted_ignores_safe_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "safe" / "self_hosted_safe.yml")
+    assert SelfHostedRunnerRule().check(wf) == []
+
+
+def test_self_hosted_survives_broken_yaml(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "broken.yml")
+    assert SelfHostedRunnerRule().check(wf) == []

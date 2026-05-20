@@ -1,0 +1,16 @@
+name: Dispatch Input
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: deployment target
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying to ${{ inputs.target }}"
