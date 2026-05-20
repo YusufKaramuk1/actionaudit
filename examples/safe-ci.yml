@@ -1,0 +1,34 @@
+# Safe CI Example
+#
+# This workflow passes every ActionAudit rule. It is the secure counterpart
+# of vulnerable-ci.yml -- compare the two to see each fix in context.
+name: Safe CI Example
+
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - uses: tj-actions/changed-files@a284dc1814e3fbfcf86bd11e0bbf02ba6ee0b6cf
+
+      - name: Print PR title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          echo "PR title: $PR_TITLE"
+
+      - name: Deploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        run: ./deploy.sh

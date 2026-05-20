@@ -1,0 +1,36 @@
+# Vulnerable CI Example
+#
+# This workflow is INTENTIONALLY insecure. It exists so you can run
+# `actionaudit scan examples/vulnerable-ci.yml` and see what the tool reports.
+# Do NOT copy any part of it into a real repository.
+#
+# It triggers, among others:
+#   - pull-request-target-with-checkout  (CRITICAL)
+#   - expression-injection-in-run        (CRITICAL)
+#   - third-party-action-not-pinned-sha  (HIGH)
+#   - hardcoded-secret                   (HIGH)
+#   - github-token-write-all             (HIGH, no permissions: block)
+name: Vulnerable CI Example
+
+on:
+  pull_request_target:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: tj-actions/changed-files@v44
+
+      - name: Print PR title
+        run: |
+          echo "PR title: ${{ github.event.pull_request.title }}"
+
+      - name: Deploy
+        env:
+          AWS_ACCESS_KEY_ID: AKIAIOSFODNN7EXAMPLE
+        run: ./deploy.sh
