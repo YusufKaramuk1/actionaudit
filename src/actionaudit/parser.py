@@ -42,7 +42,7 @@ def parse_workflow(path: Path) -> WorkflowFile:
     return WorkflowFile(path, raw_text, parsed=parsed)
 
 
-def value_position(node: Any, key: str) -> tuple[int, int] | None:
+def value_position(node: Any, key: Any) -> tuple[int, int] | None:
     """Return the ``(line, column)`` of a mapping value for ``key``.
 
     Line is 1-indexed; column is 0-indexed (ruamel's native column).
