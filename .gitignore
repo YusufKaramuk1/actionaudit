@@ -44,3 +44,6 @@ report.html
 report.json
 report.sarif
 actionaudit-results.*
+
+# Claude Code (local session / settings — never commit)
+.claude/
