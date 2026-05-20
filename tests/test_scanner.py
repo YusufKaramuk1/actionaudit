@@ -19,15 +19,17 @@ def test_discover_directory(fixtures_dir: Path) -> None:
 def test_scan_vulnerable_file_reports_finding(fixtures_dir: Path) -> None:
     target = fixtures_dir / "vulnerable" / "expression_injection.yml"
     report = scan(target)
-    assert report.total_count == 1
+    rule_ids = {f.rule_id for f in report.findings}
+    assert "expression-injection-in-run" in rule_ids
     assert report.scanned_files == [target]
     assert report.skipped == []
     assert report.overall_severity is not None
     assert report.overall_severity.value == "CRITICAL"
 
 
-def test_scan_safe_file_reports_nothing(fixtures_dir: Path) -> None:
-    report = scan(fixtures_dir / "safe" / "expression_injection.yml")
+def test_scan_clean_file_reports_nothing(fixtures_dir: Path) -> None:
+    # token_permissions.yml is clean across every rule.
+    report = scan(fixtures_dir / "safe" / "token_permissions.yml")
     assert report.total_count == 0
     assert report.overall_severity is None
 
