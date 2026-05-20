@@ -1,0 +1,12 @@
+name: Pinned Action
+on: push
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@a284dc1814e3fbfcf86bd11e0bbf02ba6ee0b6cf
+      - run: echo "build"

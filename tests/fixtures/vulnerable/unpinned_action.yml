@@ -1,0 +1,12 @@
+name: Unpinned Action
+on: push
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: tj-actions/changed-files@v44
+      - run: echo "build"

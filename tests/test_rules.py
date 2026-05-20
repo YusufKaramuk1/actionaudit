@@ -7,6 +7,7 @@ from actionaudit.rules import get_all_rules
 from actionaudit.rules.expression_injection import ExpressionInjectionRule
 from actionaudit.rules.github_token_perms import GithubTokenPermissionsRule
 from actionaudit.rules.pull_request_target import PullRequestTargetCheckoutRule
+from actionaudit.rules.unpinned_action import UnpinnedActionRule
 
 
 def test_registry_discovers_all_rules() -> None:
@@ -14,6 +15,7 @@ def test_registry_discovers_all_rules() -> None:
     assert "expression-injection-in-run" in rule_ids
     assert "pull-request-target-with-checkout" in rule_ids
     assert "github-token-write-all" in rule_ids
+    assert "third-party-action-not-pinned-sha" in rule_ids
 
 
 # --- expression-injection-in-run -------------------------------------------
@@ -98,3 +100,28 @@ def test_token_permissions_flags_missing_block(fixtures_dir: Path) -> None:
 def test_token_permissions_survives_broken_yaml(fixtures_dir: Path) -> None:
     wf = parse_workflow(fixtures_dir / "broken.yml")
     assert GithubTokenPermissionsRule().check(wf) == []
+
+
+# --- third-party-action-not-pinned-sha -------------------------------------
+
+
+def test_unpinned_action_flags_vulnerable_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "vulnerable" / "unpinned_action.yml")
+    findings = UnpinnedActionRule().check(wf)
+    # actions/checkout is a trusted owner; only tj-actions is flagged.
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.rule_id == "third-party-action-not-pinned-sha"
+    assert finding.severity.value == "HIGH"
+    # The tj-actions `uses:` is on line 11 of the fixture.
+    assert finding.line == 11
+
+
+def test_unpinned_action_ignores_safe_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "safe" / "pinned_action.yml")
+    assert UnpinnedActionRule().check(wf) == []
+
+
+def test_unpinned_action_survives_broken_yaml(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "broken.yml")
+    assert UnpinnedActionRule().check(wf) == []
