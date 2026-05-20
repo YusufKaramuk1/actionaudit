@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - SARIF v2.1.0 reporter (`--format sarif`) for GitHub Code Scanning; the
   self-scan workflow now uploads its results to Code Scanning.
+- OWASP Top 10 CI/CD category mapping for every rule, surfaced in the terminal,
+  JSON, HTML, and SARIF output and in `explain` / `list-rules`.
 - Four additional security rules:
   - `inline-curl-pipe-bash` (MEDIUM)
   - `workflow-dispatch-input-injection` (HIGH)

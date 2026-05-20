@@ -28,6 +28,45 @@ class Severity(str, Enum):
         return order[self]
 
 
+class OwaspCategory(str, Enum):
+    """OWASP Top 10 CI/CD Security Risks (2022)."""
+
+    FLOW_CONTROL = "CICD-SEC-1"
+    IAM = "CICD-SEC-2"
+    DEPENDENCY_CHAIN = "CICD-SEC-3"
+    PPE = "CICD-SEC-4"
+    PBAC = "CICD-SEC-5"
+    CREDENTIAL_HYGIENE = "CICD-SEC-6"
+    SYSTEM_CONFIG = "CICD-SEC-7"
+    THIRD_PARTY = "CICD-SEC-8"
+    ARTIFACT_INTEGRITY = "CICD-SEC-9"
+    LOGGING = "CICD-SEC-10"
+
+    @property
+    def risk_name(self) -> str:
+        """Human-readable name of the OWASP CI/CD category."""
+        return _OWASP_TITLES[self]
+
+    @property
+    def label(self) -> str:
+        """Code and name, e.g. 'CICD-SEC-4: Poisoned Pipeline Execution'."""
+        return f"{self.value}: {self.risk_name}"
+
+
+_OWASP_TITLES: dict[OwaspCategory, str] = {
+    OwaspCategory.FLOW_CONTROL: "Insufficient Flow Control Mechanisms",
+    OwaspCategory.IAM: "Inadequate Identity and Access Management",
+    OwaspCategory.DEPENDENCY_CHAIN: "Dependency Chain Abuse",
+    OwaspCategory.PPE: "Poisoned Pipeline Execution",
+    OwaspCategory.PBAC: "Insufficient Pipeline-Based Access Controls",
+    OwaspCategory.CREDENTIAL_HYGIENE: "Insufficient Credential Hygiene",
+    OwaspCategory.SYSTEM_CONFIG: "Insecure System Configuration",
+    OwaspCategory.THIRD_PARTY: "Ungoverned Usage of 3rd Party Services",
+    OwaspCategory.ARTIFACT_INTEGRITY: "Improper Artifact Integrity Validation",
+    OwaspCategory.LOGGING: "Insufficient Logging and Visibility",
+}
+
+
 @dataclass
 class WorkflowFile:
     """A GitHub Actions workflow file: raw text plus parse result.

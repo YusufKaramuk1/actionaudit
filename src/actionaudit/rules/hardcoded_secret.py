@@ -9,7 +9,7 @@ dedicated tool such as TruffleHog or Gitleaks.
 
 import re
 
-from actionaudit.models import Finding, Severity, WorkflowFile
+from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
 from actionaudit.rules.base import Rule
 
 # (label, pattern) pairs. Each pattern is anchored to a provider-defined prefix.
@@ -38,6 +38,7 @@ class HardcodedSecretRule(Rule):
     rule_id = "hardcoded-secret"
     name = "Hardcoded secret in workflow file"
     severity = Severity.HIGH
+    category = OwaspCategory.CREDENTIAL_HYGIENE
     description = (
         "A literal credential with a recognised provider format (AWS access "
         "key, GitHub token, Stripe key, Slack token, or a PEM private key) is "

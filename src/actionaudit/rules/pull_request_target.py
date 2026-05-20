@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from actionaudit.models import Finding, Severity, WorkflowFile
+from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
 from actionaudit.parser import value_position
 from actionaudit.rules.base import Rule
 
@@ -47,6 +47,7 @@ class PullRequestTargetCheckoutRule(Rule):
     rule_id = "pull-request-target-with-checkout"
     name = "Pwn Request: pull_request_target with PR head checkout"
     severity = Severity.CRITICAL
+    category = OwaspCategory.PPE
     description = (
         "The workflow is triggered by pull_request_target, which runs with the "
         "base repository's secrets and a read/write GITHUB_TOKEN -- even for "

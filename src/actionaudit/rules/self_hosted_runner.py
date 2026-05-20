@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from actionaudit.models import Finding, Severity, WorkflowFile
+from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
 from actionaudit.parser import value_position
 from actionaudit.rules.base import Rule
 
@@ -45,6 +45,7 @@ class SelfHostedRunnerRule(Rule):
     rule_id = "self-hosted-runner-fork-trigger"
     name = "Self-hosted runner reachable by fork pull requests"
     severity = Severity.MEDIUM
+    category = OwaspCategory.SYSTEM_CONFIG
     description = (
         "A job runs on a self-hosted runner in a workflow triggered by "
         "pull_request or pull_request_target. Self-hosted runners are not "

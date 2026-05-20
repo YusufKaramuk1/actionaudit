@@ -84,10 +84,11 @@ def list_rules() -> None:
     """List every available security rule."""
     rules = get_all_rules()
     id_width = max((len(rule.rule_id) for rule in rules), default=2)
-    click.echo(f"{'ID':<{id_width}}  SEVERITY  NAME")
+    click.echo(f"{'ID':<{id_width}}  SEVERITY  OWASP        NAME")
     for rule in rules:
         click.echo(
-            f"{rule.rule_id:<{id_width}}  {rule.severity.value:<8}  {rule.name}"
+            f"{rule.rule_id:<{id_width}}  {rule.severity.value:<8}  "
+            f"{rule.category.value:<11}  {rule.name}"
         )
     click.echo(f"\n{len(rules)} rule(s)")
 
@@ -107,7 +108,8 @@ def explain(rule_id: str) -> None:
     console.print()
     console.rule(f"[bold]{rule.rule_id}[/bold]")
     console.print(f"[bold]{rule.name}[/bold]")
-    console.print(f"Severity: {rule.severity.value}\n")
+    console.print(f"Severity: {rule.severity.value}")
+    console.print(f"OWASP CI/CD: {rule.category.label}\n")
     console.print("[bold]Description[/bold]")
     console.print(rule.description)
     console.print("\n[bold]Remediation[/bold]")

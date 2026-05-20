@@ -3,7 +3,7 @@
 import re
 from typing import Any
 
-from actionaudit.models import Finding, Severity, WorkflowFile
+from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
 from actionaudit.parser import locate_in_run
 from actionaudit.rules.base import Rule
 
@@ -42,6 +42,7 @@ class ExpressionInjectionRule(Rule):
     rule_id = "expression-injection-in-run"
     name = "Expression injection in run: block"
     severity = Severity.CRITICAL
+    category = OwaspCategory.PPE
     description = (
         "A GitHub Actions expression containing attacker-controllable input "
         "(PR title, issue body, branch name, etc.) is interpolated directly "

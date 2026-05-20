@@ -3,7 +3,7 @@
 import re
 from typing import Any
 
-from actionaudit.models import Finding, Severity, WorkflowFile
+from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
 from actionaudit.parser import locate_in_run
 from actionaudit.rules.base import Rule
 
@@ -21,6 +21,7 @@ class WorkflowDispatchInputRule(Rule):
     rule_id = "workflow-dispatch-input-injection"
     name = "Workflow input interpolated into run: block"
     severity = Severity.HIGH
+    category = OwaspCategory.PPE
     description = (
         "A workflow_dispatch or workflow_call input is interpolated directly "
         "into a run: shell script. Inputs are free-form text supplied by "

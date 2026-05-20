@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 
-from actionaudit.models import Finding, Severity, WorkflowFile
+from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
 
 
 class Rule(ABC):
@@ -17,6 +17,7 @@ class Rule(ABC):
     rule_id: str
     name: str
     severity: Severity
+    category: OwaspCategory
     description: str
     remediation: str
     references: list[str]

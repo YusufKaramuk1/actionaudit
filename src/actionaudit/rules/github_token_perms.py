@@ -2,7 +2,7 @@
 
 from typing import Any
 
-from actionaudit.models import Finding, Severity, WorkflowFile
+from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
 from actionaudit.parser import value_position
 from actionaudit.rules.base import Rule
 
@@ -14,6 +14,7 @@ class GithubTokenPermissionsRule(Rule):
     rule_id = "github-token-write-all"
     name = "GITHUB_TOKEN with write-all or default permissions"
     severity = Severity.HIGH
+    category = OwaspCategory.PBAC
     description = (
         "With permissions: write-all -- or with no permissions: block, which "
         "inherits the repository default -- the GITHUB_TOKEN issued to the "

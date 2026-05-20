@@ -2,6 +2,7 @@
 
 from pathlib import Path
 
+from actionaudit.models import OwaspCategory
 from actionaudit.parser import parse_workflow
 from actionaudit.rules import get_all_rules
 from actionaudit.rules.bash_set_x import BashSetXRule
@@ -30,6 +31,11 @@ def test_registry_discovers_all_rules() -> None:
         "bash-with-set-x",
         "self-hosted-runner-fork-trigger",
     }
+
+
+def test_every_rule_declares_an_owasp_category() -> None:
+    for rule in get_all_rules():
+        assert isinstance(rule.category, OwaspCategory)
 
 
 # --- expression-injection-in-run -------------------------------------------

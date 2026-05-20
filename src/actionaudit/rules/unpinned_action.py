@@ -3,7 +3,7 @@
 import re
 from typing import Any
 
-from actionaudit.models import Finding, Severity, WorkflowFile
+from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
 from actionaudit.parser import value_position
 from actionaudit.rules.base import Rule
 
@@ -21,6 +21,7 @@ class UnpinnedActionRule(Rule):
     rule_id = "third-party-action-not-pinned-sha"
     name = "Third-party action not pinned to a commit SHA"
     severity = Severity.HIGH
+    category = OwaspCategory.DEPENDENCY_CHAIN
     description = (
         "A third-party action is referenced by a mutable Git tag or branch "
         "(@v4, @main) rather than an immutable commit SHA. Tags can be moved "

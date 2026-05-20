@@ -3,7 +3,7 @@
 import re
 from typing import Any
 
-from actionaudit.models import Finding, Severity, WorkflowFile
+from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
 from actionaudit.parser import value_position
 from actionaudit.rules.base import Rule
 
@@ -34,6 +34,7 @@ class PersistCredentialsRule(Rule):
     rule_id = "persist-credentials-default-true"
     name = "actions/checkout persists credentials by default"
     severity = Severity.MEDIUM
+    category = OwaspCategory.CREDENTIAL_HYGIENE
     description = (
         "actions/checkout writes the GITHUB_TOKEN into the local .git/config "
         "by default (persist-credentials defaults to true). Any later step in "

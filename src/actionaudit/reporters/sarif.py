@@ -28,6 +28,8 @@ def _rule_descriptor(rule: Rule) -> dict[str, Any]:
         "fullDescription": {"text": rule.description},
         "help": {"text": rule.remediation},
         "defaultConfiguration": {"level": _SARIF_LEVEL[rule.severity]},
+        # Tags surface in GitHub Code Scanning as filterable labels.
+        "properties": {"tags": [rule.category.value], "owasp": rule.category.label},
     }
     if rule.references:
         descriptor["helpUri"] = rule.references[0]

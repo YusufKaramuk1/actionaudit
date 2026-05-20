@@ -27,6 +27,7 @@ def test_explain_known_rule() -> None:
     assert result.exit_code == 0
     assert "Remediation" in result.output
     assert "References" in result.output
+    assert "CICD-SEC" in result.output
 
 
 def test_explain_unknown_rule_exits_with_2() -> None:

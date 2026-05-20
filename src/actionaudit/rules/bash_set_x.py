@@ -3,7 +3,7 @@
 import re
 from typing import Any
 
-from actionaudit.models import Finding, Severity, WorkflowFile
+from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
 from actionaudit.parser import locate_in_run
 from actionaudit.rules.base import Rule
 
@@ -18,6 +18,7 @@ class BashSetXRule(Rule):
     rule_id = "bash-with-set-x"
     name = "Shell debug tracing enabled in run: block"
     severity = Severity.LOW
+    category = OwaspCategory.LOGGING
     description = (
         "A run: step enables shell command tracing (set -x). With tracing on, "
         "the shell echoes every command -- including expanded secret values "

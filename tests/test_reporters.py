@@ -27,6 +27,7 @@ def test_json_reporter_finding_has_expected_keys(fixtures_dir: Path) -> None:
     for key in (
         "rule_id",
         "severity",
+        "owasp_category",
         "workflow_path",
         "line",
         "column",
@@ -37,6 +38,15 @@ def test_json_reporter_finding_has_expected_keys(fixtures_dir: Path) -> None:
         "confidence",
     ):
         assert key in finding
+
+
+def test_json_reporter_finding_carries_owasp_category(fixtures_dir: Path) -> None:
+    report = scan(fixtures_dir / "vulnerable" / "expression_injection.yml")
+    payload = json.loads(json_reporter.render(report))
+    injection = next(
+        f for f in payload["findings"] if f["rule_id"] == "expression-injection-in-run"
+    )
+    assert injection["owasp_category"] == "CICD-SEC-4"
 
 
 def test_json_reporter_empty_report() -> None:
@@ -57,6 +67,9 @@ def test_html_reporter_produces_html_document(fixtures_dir: Path) -> None:
     assert "hardcoded-secret" in out
     # The educational detail block must be present.
     assert "how to fix it" in out
+    # OWASP category mapping must be surfaced.
+    assert "OWASP CI/CD Top 10" in out
+    assert "CICD-SEC" in out
 
 
 def test_html_reporter_empty_report() -> None:
@@ -88,6 +101,15 @@ def test_sarif_result_has_location_and_level(fixtures_dir: Path) -> None:
     region = result["locations"][0]["physicalLocation"]["region"]
     assert region["startLine"] >= 1
     assert region["startColumn"] >= 1
+
+
+def test_sarif_rule_descriptor_carries_owasp_tags(fixtures_dir: Path) -> None:
+    report = scan(fixtures_dir / "vulnerable" / "expression_injection.yml")
+    payload = json.loads(sarif.render(report))
+    descriptors = payload["runs"][0]["tool"]["driver"]["rules"]
+    for descriptor in descriptors:
+        tags = descriptor["properties"]["tags"]
+        assert any(tag.startswith("CICD-SEC-") for tag in tags)
 
 
 def test_sarif_empty_report() -> None:

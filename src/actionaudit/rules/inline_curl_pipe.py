@@ -3,7 +3,7 @@
 import re
 from typing import Any
 
-from actionaudit.models import Finding, Severity, WorkflowFile
+from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
 from actionaudit.parser import locate_in_run
 from actionaudit.rules.base import Rule
 
@@ -19,6 +19,7 @@ class InlineCurlPipeRule(Rule):
     rule_id = "inline-curl-pipe-bash"
     name = "Remote script piped directly into a shell"
     severity = Severity.MEDIUM
+    category = OwaspCategory.DEPENDENCY_CHAIN
     description = (
         "A run: step downloads a script with curl or wget and pipes it "
         "straight into a shell. The downloaded content is executed without "

@@ -17,7 +17,9 @@
   .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
   h1 { font-size: 24px; margin: 0 0 4px; }
   .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
-  .grid { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+  .section-title { font-size: 13px; color: var(--muted); margin: 26px 0 10px;
+                   text-transform: uppercase; letter-spacing: .5px; }
+  .grid { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
   .stat { background: var(--panel); border: 1px solid var(--border);
           border-radius: 8px; padding: 14px 18px; min-width: 92px; }
   .stat .n { font-size: 26px; font-weight: 700; }
@@ -65,6 +67,7 @@
     {{ report.scanned_files | length }} file(s) scanned in {{ report.duration_ms }} ms
   </div>
 
+  <div class="section-title">Findings by severity</div>
   <div class="grid">
     {% for sev in severities %}
     <div class="stat">
@@ -74,10 +77,24 @@
     {% endfor %}
   </div>
 
+  {% if owasp_counts %}
+  <div class="section-title">OWASP CI/CD Top 10 &mdash; findings by category</div>
+  <div class="grid">
+    {% for category, count in owasp_counts %}
+    <div class="stat" title="{{ category.risk_name }}">
+      <div class="n">{{ count }}</div>
+      <div class="l">{{ category.value }}</div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
   {% set cls_map = {'critical': 'crit', 'high': 'high', 'medium': 'med', 'low': 'low', 'info': 'info'} %}
+  <div class="section-title">Findings</div>
   {% if findings %}
     {% for f in findings %}
     {% set cls = cls_map[f.severity.value | lower] %}
+    {% set rule = rules_by_id.get(f.rule_id) %}
     <div class="finding {{ cls }}">
       <span class="badge b-{{ cls }}">{{ f.severity.value }}</span>
       <span class="rid">{{ f.rule_id }}</span>
@@ -85,15 +102,16 @@
         {{ f.workflow_path }}:{{ f.line }}
         {%- if f.job_name %} &middot; job: {{ f.job_name }}{% endif %}
         {%- if f.step_index is not none %} &middot; step: {{ f.step_index }}{% endif %}
+        {%- if rule %} &middot; OWASP {{ rule.category.value }}{% endif %}
         &middot; confidence: {{ f.confidence }}
       </div>
       {% if f.snippet %}<div class="snippet">{{ f.snippet }}</div>{% endif %}
       <div class="msg">{{ f.message }}</div>
-      {% set rule = rules_by_id.get(f.rule_id) %}
       {% if rule %}
       <details>
         <summary>Why this matters &amp; how to fix it</summary>
         <div class="detail">
+          <p><strong>{{ rule.category.label }}</strong></p>
           <p>{{ rule.description }}</p>
           <strong>Remediation</strong>
           <pre>{{ rule.remediation }}</pre>
