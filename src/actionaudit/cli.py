@@ -8,7 +8,7 @@ from rich.console import Console
 
 from actionaudit import __version__
 from actionaudit.models import Severity
-from actionaudit.reporters import json_reporter, terminal
+from actionaudit.reporters import html, json_reporter, terminal
 from actionaudit.rules import get_all_rules
 from actionaudit.scanner import scan as run_scan
 
@@ -28,7 +28,7 @@ def cli() -> None:
 @click.option(
     "--format",
     "output_format",
-    type=click.Choice(["terminal", "json"], case_sensitive=False),
+    type=click.Choice(["terminal", "json", "html"], case_sensitive=False),
     default="terminal",
     help="Output format (default: terminal).",
 )
@@ -53,16 +53,17 @@ def scan(
 ) -> None:
     """Scan PATH for GitHub Actions workflow security issues."""
     report = run_scan(path)
+    fmt = output_format.lower()
 
-    if output_format.lower() == "json":
-        rendered = json_reporter.render(report)
+    if fmt == "terminal":
+        terminal.render(report)
+    else:
+        rendered = json_reporter.render(report) if fmt == "json" else html.render(report)
         if output_path is not None:
             output_path.write_text(rendered, encoding="utf-8")
-            click.echo(f"JSON report written to {output_path}")
+            click.echo(f"{fmt.upper()} report written to {output_path}")
         else:
             click.echo(rendered)
-    else:
-        terminal.render(report)
 
     if fail_on is not None:
         threshold = Severity[fail_on.upper()]

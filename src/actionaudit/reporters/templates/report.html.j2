@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ActionAudit Report</title>
+<style>
+  :root {
+    --bg: #0d1117; --panel: #161b22; --border: #30363d;
+    --text: #e6edf3; --muted: #8b949e;
+    --critical: #f85149; --high: #ff8e3c; --medium: #d29922;
+    --low: #58a6ff; --info: #8b949e; --ok: #3fb950;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font-family: -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5; }
+  .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
+  h1 { font-size: 24px; margin: 0 0 4px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .grid { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 28px; }
+  .stat { background: var(--panel); border: 1px solid var(--border);
+          border-radius: 8px; padding: 14px 18px; min-width: 92px; }
+  .stat .n { font-size: 26px; font-weight: 700; }
+  .stat .l { font-size: 11px; text-transform: uppercase; letter-spacing: .5px;
+             color: var(--muted); }
+  .finding { background: var(--panel); border: 1px solid var(--border);
+             border-left-width: 4px; border-radius: 8px; padding: 16px 18px;
+             margin-bottom: 14px; }
+  .badge { display: inline-block; font-size: 11px; font-weight: 700;
+           padding: 2px 8px; border-radius: 4px; text-transform: uppercase; }
+  .rid { font-weight: 600; margin-left: 6px; }
+  .loc { color: var(--muted); font-size: 13px; margin: 6px 0; }
+  .snippet { background: var(--bg); border: 1px solid var(--border);
+             border-radius: 6px; padding: 8px 10px; overflow-x: auto; margin: 8px 0;
+             font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12px; }
+  .msg { margin: 8px 0; }
+  details { margin-top: 8px; }
+  summary { cursor: pointer; color: var(--low); font-size: 13px; }
+  .detail { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .detail pre { white-space: pre-wrap; background: var(--bg);
+                border: 1px solid var(--border); border-radius: 6px; padding: 10px; }
+  .detail a { color: var(--low); word-break: break-all; }
+  .crit { border-left-color: var(--critical); }
+  .high { border-left-color: var(--high); }
+  .med  { border-left-color: var(--medium); }
+  .low  { border-left-color: var(--low); }
+  .info { border-left-color: var(--info); }
+  .b-crit { background: var(--critical); color: #0d1117; }
+  .b-high { background: var(--high); color: #0d1117; }
+  .b-med  { background: var(--medium); color: #0d1117; }
+  .b-low  { background: var(--low); color: #0d1117; }
+  .b-info { background: var(--info); color: #0d1117; }
+  .empty { background: var(--panel); border: 1px solid var(--border);
+           border-radius: 8px; padding: 24px; text-align: center; color: var(--ok); }
+  .skipped { color: var(--muted); font-size: 12px; margin-top: 20px; }
+  footer { color: var(--muted); font-size: 12px; margin-top: 32px;
+           border-top: 1px solid var(--border); padding-top: 14px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>ActionAudit Report</h1>
+  <div class="sub">
+    actionaudit {{ tool_version }} &middot; {{ timestamp }} &middot;
+    {{ report.scanned_files | length }} file(s) scanned in {{ report.duration_ms }} ms
+  </div>
+
+  <div class="grid">
+    {% for sev in severities %}
+    <div class="stat">
+      <div class="n" style="color: var(--{{ sev.value | lower }})">{{ report.count(sev) }}</div>
+      <div class="l">{{ sev.value }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% set cls_map = {'critical': 'crit', 'high': 'high', 'medium': 'med', 'low': 'low', 'info': 'info'} %}
+  {% if findings %}
+    {% for f in findings %}
+    {% set cls = cls_map[f.severity.value | lower] %}
+    <div class="finding {{ cls }}">
+      <span class="badge b-{{ cls }}">{{ f.severity.value }}</span>
+      <span class="rid">{{ f.rule_id }}</span>
+      <div class="loc">
+        {{ f.workflow_path }}:{{ f.line }}
+        {%- if f.job_name %} &middot; job: {{ f.job_name }}{% endif %}
+        {%- if f.step_index is not none %} &middot; step: {{ f.step_index }}{% endif %}
+        &middot; confidence: {{ f.confidence }}
+      </div>
+      {% if f.snippet %}<div class="snippet">{{ f.snippet }}</div>{% endif %}
+      <div class="msg">{{ f.message }}</div>
+      {% set rule = rules_by_id.get(f.rule_id) %}
+      {% if rule %}
+      <details>
+        <summary>Why this matters &amp; how to fix it</summary>
+        <div class="detail">
+          <p>{{ rule.description }}</p>
+          <strong>Remediation</strong>
+          <pre>{{ rule.remediation }}</pre>
+          {% if rule.references %}
+          <strong>References</strong>
+          <ul>
+            {% for ref in rule.references %}<li><a href="{{ ref }}">{{ ref }}</a></li>{% endfor %}
+          </ul>
+          {% endif %}
+        </div>
+      </details>
+      {% endif %}
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="empty">No findings. All scanned workflows passed every rule.</div>
+  {% endif %}
+
+  {% if report.skipped %}
+  <div class="skipped">
+    <strong>Skipped files</strong>
+    {% for path, reason in report.skipped %}
+    <div>{{ path }} &mdash; {{ reason }}</div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  <footer>
+    Generated by ActionAudit &mdash; static security scanner for GitHub Actions workflows.
+  </footer>
+</div>
+</body>
+</html>

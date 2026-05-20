@@ -4,8 +4,10 @@ import json
 from pathlib import Path
 
 from actionaudit.models import ScanReport
-from actionaudit.reporters import json_reporter
+from actionaudit.reporters import html, json_reporter
 from actionaudit.scanner import scan
+
+# --- JSON reporter ---------------------------------------------------------
 
 
 def test_json_reporter_produces_valid_json(fixtures_dir: Path) -> None:
@@ -42,3 +44,22 @@ def test_json_reporter_empty_report() -> None:
     payload = json.loads(json_reporter.render(report))
     assert payload["summary"]["total"] == 0
     assert payload["summary"]["overall_severity"] is None
+
+
+# --- HTML reporter ---------------------------------------------------------
+
+
+def test_html_reporter_produces_html_document(fixtures_dir: Path) -> None:
+    report = scan(fixtures_dir / "vulnerable" / "hardcoded_secret.yml")
+    out = html.render(report)
+    assert out.startswith("<!DOCTYPE html>")
+    assert "ActionAudit Report" in out
+    assert "hardcoded-secret" in out
+    # The educational detail block must be present.
+    assert "how to fix it" in out
+
+
+def test_html_reporter_empty_report() -> None:
+    report = ScanReport(findings=[], scanned_files=[], skipped=[], duration_ms=0)
+    out = html.render(report)
+    assert "No findings" in out
