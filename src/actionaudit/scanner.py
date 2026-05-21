@@ -4,7 +4,7 @@ import time
 from pathlib import Path
 
 from actionaudit.models import Finding, ScanReport
-from actionaudit.parser import parse_workflow
+from actionaudit.parser import parse_ignore_directives, parse_workflow
 from actionaudit.rules import get_all_rules
 
 _WORKFLOW_EXTENSIONS = (".yml", ".yaml")
@@ -37,6 +37,18 @@ def discover_workflows(target: Path) -> list[Path]:
     return sorted(p for p in found if not p.name.startswith("."))
 
 
+def _is_ignored(finding: Finding, directives: dict[int, set[str]]) -> bool:
+    """True if an inline ``# actionaudit: ignore`` directive suppresses this finding.
+
+    A directive applies to its own line and the line immediately below it.
+    """
+    for line in (finding.line, finding.line - 1):
+        ignored = directives.get(line)
+        if ignored and ("*" in ignored or finding.rule_id in ignored):
+            return True
+    return False
+
+
 def scan(target: Path) -> ScanReport:
     """Scan ``target`` and return an aggregated :class:`ScanReport`.
 
@@ -60,8 +72,11 @@ def scan(target: Path) -> ScanReport:
             continue
 
         scanned.append(path)
+        directives = parse_ignore_directives(workflow.raw_text)
         for rule in rules:
-            findings.extend(rule.check(workflow))
+            for finding in rule.check(workflow):
+                if not _is_ignored(finding, directives):
+                    findings.append(finding)
 
     duration_ms = int((time.perf_counter() - start) * 1000)
     return ScanReport(

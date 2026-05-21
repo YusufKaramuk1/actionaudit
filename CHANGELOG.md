@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   self-scan workflow now uploads its results to Code Scanning.
 - OWASP Top 10 CI/CD category mapping for every rule, surfaced in the terminal,
   JSON, HTML, and SARIF output and in `explain` / `list-rules`.
+- Inline ignore directives: `# actionaudit: ignore <rule-id>` in a workflow
+  comment suppresses findings on that line (and the line below it).
 - Four additional security rules:
   - `inline-curl-pipe-bash` (MEDIUM)
   - `workflow-dispatch-input-injection` (HIGH)

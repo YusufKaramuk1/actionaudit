@@ -1,5 +1,6 @@
 """YAML parsing and source-location helpers for workflow files."""
 
+import re
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -115,3 +116,30 @@ def iter_steps(workflow: WorkflowFile) -> Iterator[tuple[str, int, Any]]:
         for index, step in enumerate(steps):
             if isinstance(step, dict):
                 yield job_name, index, step
+
+
+# Matches `# actionaudit: ignore [<rule-id>[, <rule-id>...]]` in a YAML comment.
+_IGNORE_DIRECTIVE = re.compile(r"#\s*actionaudit:\s*ignore\b\s*(.*)", re.IGNORECASE)
+
+
+def parse_ignore_directives(raw_text: str) -> dict[int, set[str]]:
+    """Map 1-indexed line numbers to the rule IDs suppressed on that line.
+
+    ``# actionaudit: ignore <rule-id>[, <rule-id>...]`` suppresses those rules;
+    ``# actionaudit: ignore`` with no rule id (or ``all``) suppresses every
+    rule, recorded as ``"*"``. The caller applies a directive to its own line
+    and the line below it, so it works both inline and on the line above.
+    """
+    directives: dict[int, set[str]] = {}
+    for index, line in enumerate(raw_text.splitlines(), start=1):
+        match = _IGNORE_DIRECTIVE.search(line)
+        if match is None:
+            continue
+        rest = match.group(1).strip()
+        if not rest or rest.lower() == "all":
+            directives[index] = {"*"}
+        else:
+            directives[index] = {
+                token.strip() for token in rest.split(",") if token.strip()
+            }
+    return directives

@@ -2,7 +2,12 @@
 
 from pathlib import Path
 
-from actionaudit.parser import locate_in_run, parse_workflow, value_position
+from actionaudit.parser import (
+    locate_in_run,
+    parse_ignore_directives,
+    parse_workflow,
+    value_position,
+)
 
 
 def test_parses_valid_workflow(fixtures_dir: Path) -> None:
@@ -57,3 +62,19 @@ def test_value_position_of_run_key(fixtures_dir: Path) -> None:
     line, _col = pos
     # `run:` value on the single-line step is on line 9.
     assert line == 9
+
+
+def test_parse_ignore_directives_single_rule() -> None:
+    text = "a\nfoo  # actionaudit: ignore expression-injection-in-run\nb"
+    directives = parse_ignore_directives(text)
+    assert directives == {2: {"expression-injection-in-run"}}
+
+
+def test_parse_ignore_directives_multiple_rules() -> None:
+    directives = parse_ignore_directives("x  # actionaudit: ignore rule-a, rule-b")
+    assert directives == {1: {"rule-a", "rule-b"}}
+
+
+def test_parse_ignore_directives_all() -> None:
+    directives = parse_ignore_directives("x  # actionaudit: ignore")
+    assert directives == {1: {"*"}}

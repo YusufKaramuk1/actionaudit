@@ -44,3 +44,11 @@ def test_scan_missing_path_returns_empty(tmp_path: Path) -> None:
     report = scan(tmp_path / "nope.yml")
     assert report.total_count == 0
     assert report.scanned_files == []
+
+
+def test_scan_respects_inline_ignore(fixtures_dir: Path) -> None:
+    # ignore_directive.yml has an expression injection plus an inline
+    # `# actionaudit: ignore expression-injection-in-run` on the same line.
+    report = scan(fixtures_dir / "ignore_directive.yml")
+    rule_ids = {f.rule_id for f in report.findings}
+    assert "expression-injection-in-run" not in rule_ids
