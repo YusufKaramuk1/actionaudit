@@ -11,7 +11,7 @@ from actionaudit.cli import cli
 def test_version() -> None:
     result = CliRunner().invoke(cli, ["--version"])
     assert result.exit_code == 0
-    assert "1.0.0" in result.output
+    assert "1.1.0" in result.output
 
 
 def test_list_rules_shows_every_rule() -> None:
