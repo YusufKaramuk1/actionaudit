@@ -4,7 +4,7 @@ import re
 from typing import Any
 
 from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
-from actionaudit.parser import value_position
+from actionaudit.parser import iter_steps, value_position
 from actionaudit.rules.base import Rule
 
 # Substrings that indicate the workflow actually consumes the GITHUB_TOKEN.
@@ -57,29 +57,15 @@ class PersistCredentialsRule(Rule):
 
     def check(self, workflow: WorkflowFile) -> list[Finding]:
         findings: list[Finding] = []
-        if not workflow.is_valid:
-            return findings
         # Heuristic gate: the default is only worth flagging when the workflow
         # actually relies on the token somewhere.
         if not _uses_token(workflow.raw_text):
             return findings
 
-        jobs = workflow.parsed.get("jobs")
-        if not isinstance(jobs, dict):
-            return findings
-
-        for job_name, job in jobs.items():
-            if not isinstance(job, dict):
-                continue
-            steps = job.get("steps")
-            if not isinstance(steps, list):
-                continue
-            for step_index, step in enumerate(steps):
-                if not isinstance(step, dict):
-                    continue
-                finding = self._check_checkout(workflow, str(job_name), step_index, step)
-                if finding is not None:
-                    findings.append(finding)
+        for job_name, step_index, step in iter_steps(workflow):
+            finding = self._check_checkout(workflow, job_name, step_index, step)
+            if finding is not None:
+                findings.append(finding)
         return findings
 
     def _check_checkout(

@@ -3,7 +3,7 @@
 from typing import Any
 
 from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
-from actionaudit.parser import value_position
+from actionaudit.parser import iter_jobs, value_position
 from actionaudit.rules.base import Rule
 
 
@@ -45,18 +45,12 @@ class GithubTokenPermissionsRule(Rule):
         if root_perms == "write-all":
             findings.append(self._write_all_finding(workflow, parsed, None))
 
-        jobs = parsed.get("jobs")
         job_perms_flags: list[bool] = []
-        if isinstance(jobs, dict):
-            for job_name, job in jobs.items():
-                if not isinstance(job, dict):
-                    continue
-                job_perms = job.get("permissions")
-                job_perms_flags.append(job_perms is not None)
-                if job_perms == "write-all":
-                    findings.append(
-                        self._write_all_finding(workflow, job, str(job_name))
-                    )
+        for job_name, job in iter_jobs(workflow):
+            job_perms = job.get("permissions")
+            job_perms_flags.append(job_perms is not None)
+            if job_perms == "write-all":
+                findings.append(self._write_all_finding(workflow, job, job_name))
 
         # No workflow-level permissions and at least one job also lacks one:
         # the token scope is left to the repository default.

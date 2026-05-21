@@ -4,7 +4,7 @@ import re
 from typing import Any
 
 from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
-from actionaudit.parser import locate_in_run
+from actionaudit.parser import iter_steps, locate_in_run
 from actionaudit.rules.base import Rule
 
 # `set -x`, `set -ex`, `set -eux` -- enables command tracing.
@@ -36,24 +36,10 @@ class BashSetXRule(Rule):
 
     def check(self, workflow: WorkflowFile) -> list[Finding]:
         findings: list[Finding] = []
-        if not workflow.is_valid:
-            return findings
-        jobs = workflow.parsed.get("jobs")
-        if not isinstance(jobs, dict):
-            return findings
-
-        for job_name, job in jobs.items():
-            if not isinstance(job, dict):
-                continue
-            steps = job.get("steps")
-            if not isinstance(steps, list):
-                continue
-            for step_index, step in enumerate(steps):
-                if not isinstance(step, dict):
-                    continue
-                findings.extend(
-                    self._check_step(workflow, str(job_name), step_index, step)
-                )
+        for job_name, step_index, step in iter_steps(workflow):
+            findings.extend(
+                self._check_step(workflow, job_name, step_index, step)
+            )
         return findings
 
     def _check_step(

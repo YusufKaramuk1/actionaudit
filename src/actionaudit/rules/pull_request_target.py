@@ -3,7 +3,7 @@
 from typing import Any
 
 from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
-from actionaudit.parser import value_position
+from actionaudit.parser import iter_steps, value_position
 from actionaudit.rules.base import Rule
 
 # Context fields that resolve to attacker-controlled PR head code or refs.
@@ -75,22 +75,10 @@ class PullRequestTargetCheckoutRule(Rule):
         if "pull_request_target" not in _triggers(_on_block(workflow.parsed)):
             return findings
 
-        jobs = workflow.parsed.get("jobs")
-        if isinstance(jobs, dict):
-            for job_name, job in jobs.items():
-                if not isinstance(job, dict):
-                    continue
-                steps = job.get("steps")
-                if not isinstance(steps, list):
-                    continue
-                for step_index, step in enumerate(steps):
-                    if not isinstance(step, dict):
-                        continue
-                    finding = self._check_checkout(
-                        workflow, str(job_name), step_index, step
-                    )
-                    if finding is not None:
-                        findings.append(finding)
+        for job_name, step_index, step in iter_steps(workflow):
+            finding = self._check_checkout(workflow, job_name, step_index, step)
+            if finding is not None:
+                findings.append(finding)
 
         # No explicit PR-head checkout, but the workflow still touches PR head
         # context somewhere -- flag at lower confidence for manual review.

@@ -3,7 +3,7 @@
 from typing import Any
 
 from actionaudit.models import Finding, OwaspCategory, Severity, WorkflowFile
-from actionaudit.parser import value_position
+from actionaudit.parser import iter_jobs, value_position
 from actionaudit.rules.base import Rule
 
 # Triggers that a forked pull request can reach.
@@ -69,13 +69,7 @@ class SelfHostedRunnerRule(Rule):
         if not (_triggers(_on_block(workflow.parsed)) & _FORK_TRIGGERS):
             return findings
 
-        jobs = workflow.parsed.get("jobs")
-        if not isinstance(jobs, dict):
-            return findings
-
-        for job_name, job in jobs.items():
-            if not isinstance(job, dict):
-                continue
+        for job_name, job in iter_jobs(workflow):
             runs_on = job.get("runs-on")
             if not _is_self_hosted(runs_on):
                 continue

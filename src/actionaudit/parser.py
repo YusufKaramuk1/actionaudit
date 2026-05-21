@@ -1,5 +1,6 @@
 """YAML parsing and source-location helpers for workflow files."""
 
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -87,3 +88,30 @@ def locate_in_run(step: Any, needle: str) -> int | None:
                 return value_line + 2 + offset
             return value_line + 1 + offset
     return None
+
+
+def iter_jobs(workflow: WorkflowFile) -> Iterator[tuple[str, Any]]:
+    """Yield ``(job_name, job_mapping)`` for every well-formed job.
+
+    Yields nothing for an invalid workflow or a malformed ``jobs:`` block, so
+    rules can iterate without repeating the same defensive type checks.
+    """
+    if not workflow.is_valid:
+        return
+    jobs = workflow.parsed.get("jobs")
+    if not isinstance(jobs, dict):
+        return
+    for job_name, job in jobs.items():
+        if isinstance(job, dict):
+            yield str(job_name), job
+
+
+def iter_steps(workflow: WorkflowFile) -> Iterator[tuple[str, int, Any]]:
+    """Yield ``(job_name, step_index, step_mapping)`` for every well-formed step."""
+    for job_name, job in iter_jobs(workflow):
+        steps = job.get("steps")
+        if not isinstance(steps, list):
+            continue
+        for index, step in enumerate(steps):
+            if isinstance(step, dict):
+                yield job_name, index, step
