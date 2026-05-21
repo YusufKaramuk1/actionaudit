@@ -8,7 +8,7 @@ from typing import Any
 if sys.version_info >= (3, 11):
     import tomllib
 else:  # Python 3.10 has no tomllib in the standard library.
-    import tomli as tomllib  # type: ignore[import-not-found]
+    import tomli as tomllib
 
 from actionaudit.models import Severity
 

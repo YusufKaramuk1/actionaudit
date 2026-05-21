@@ -87,6 +87,12 @@ warn_unused_ignores = true
 warn_redundant_casts = true
 show_error_codes = true
 
+# tomli is only installed on Python 3.10 (3.11+ uses stdlib tomllib), so mypy
+# must not fail when it is absent from the type-check environment.
+[[tool.mypy.overrides]]
+module = ["tomli"]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "--strict-markers"
