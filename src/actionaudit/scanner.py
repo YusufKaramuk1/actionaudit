@@ -3,6 +3,7 @@
 import time
 from pathlib import Path
 
+from actionaudit.config import Config, load_config
 from actionaudit.models import Finding, ScanReport
 from actionaudit.parser import parse_ignore_directives, parse_workflow
 from actionaudit.rules import get_all_rules
@@ -49,14 +50,21 @@ def _is_ignored(finding: Finding, directives: dict[int, set[str]]) -> bool:
     return False
 
 
-def scan(target: Path) -> ScanReport:
+def scan(target: Path, config: Config | None = None) -> ScanReport:
     """Scan ``target`` and return an aggregated :class:`ScanReport`.
 
-    Never raises on bad input: unreadable or malformed files are recorded in
-    ``ScanReport.skipped`` and scanning continues across the rest.
+    Configuration is read from the nearest ``pyproject.toml`` unless an explicit
+    :class:`Config` is passed. Never raises on bad input: unreadable or
+    malformed files are recorded in ``ScanReport.skipped`` and scanning
+    continues across the rest.
     """
     start = time.perf_counter()
-    rules = get_all_rules()
+    if config is None:
+        config = load_config(target)
+
+    rules = [
+        rule for rule in get_all_rules() if rule.rule_id not in config.disabled_rules
+    ]
 
     findings: list[Finding] = []
     scanned: list[Path] = []
@@ -75,8 +83,12 @@ def scan(target: Path) -> ScanReport:
         directives = parse_ignore_directives(workflow.raw_text)
         for rule in rules:
             for finding in rule.check(workflow):
-                if not _is_ignored(finding, directives):
-                    findings.append(finding)
+                if _is_ignored(finding, directives):
+                    continue
+                override = config.severity_overrides.get(finding.rule_id)
+                if override is not None:
+                    finding.severity = override
+                findings.append(finding)
 
     duration_ms = int((time.perf_counter() - start) * 1000)
     return ScanReport(
