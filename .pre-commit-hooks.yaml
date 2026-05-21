@@ -1,0 +1,8 @@
+- id: actionaudit
+  name: ActionAudit
+  description: Scan GitHub Actions workflows for security issues
+  entry: actionaudit scan
+  language: python
+  files: ^\.github/workflows/.*\.ya?ml$
+  pass_filenames: false
+  args: ['--fail-on', 'high']

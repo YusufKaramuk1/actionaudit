@@ -4,6 +4,13 @@ All notable changes to ActionAudit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- pre-commit hook support via `.pre-commit-hooks.yaml`: use ActionAudit with
+  `repo: https://github.com/YusufKaramuk1/actionaudit` in `.pre-commit-config.yaml`.
+
 ## [0.3.0] - 2026-05-21
 
 ### Added

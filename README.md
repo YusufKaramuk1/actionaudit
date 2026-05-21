@@ -67,6 +67,21 @@ Add ActionAudit to any repository's workflow:
 Findings are emitted as inline annotations on the pull request, and the step
 fails when a finding at or above `fail-on` is present.
 
+## Use as a pre-commit hook
+
+Add ActionAudit to `.pre-commit-config.yaml`:
+
+```yaml
+repos:
+  - repo: https://github.com/YusufKaramuk1/actionaudit
+    rev: v0.4.0
+    hooks:
+      - id: actionaudit
+```
+
+The hook runs whenever a workflow file changes and fails the commit on a
+HIGH-or-above finding (override with `args: ['--fail-on', 'critical']`).
+
 ## Rules
 
 | ID | Severity | OWASP | What it catches |
