@@ -53,6 +53,20 @@ actionaudit list-rules
 actionaudit explain expression-injection-in-run
 ```
 
+## Use as a GitHub Action
+
+Add ActionAudit to any repository's workflow:
+
+```yaml
+- uses: YusufKaramuk1/actionaudit@v0.3.0
+  with:
+    path: .github/workflows
+    fail-on: high
+```
+
+Findings are emitted as inline annotations on the pull request, and the step
+fails when a finding at or above `fail-on` is present.
+
 ## Rules
 
 | ID | Severity | OWASP | What it catches |

@@ -1,0 +1,36 @@
+name: 'ActionAudit'
+description: 'Static security scanner for GitHub Actions workflows'
+author: 'Yusuf Karamuk'
+
+branding:
+  icon: 'shield'
+  color: 'red'
+
+inputs:
+  path:
+    description: 'Path to scan for workflow security issues'
+    default: '.github/workflows'
+    required: false
+  fail-on:
+    description: 'Fail the run when a finding at or above this severity exists (critical, high, medium, low)'
+    default: 'high'
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.11'
+
+    - name: Install ActionAudit
+      shell: bash
+      run: pip install "${{ github.action_path }}"
+
+    - name: Run ActionAudit
+      shell: bash
+      env:
+        AA_PATH: ${{ inputs.path }}
+        AA_FAIL_ON: ${{ inputs.fail-on }}
+      run: actionaudit scan "$AA_PATH" --format github --fail-on "$AA_FAIL_ON"

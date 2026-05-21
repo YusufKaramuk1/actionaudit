@@ -4,6 +4,15 @@ All notable changes to ActionAudit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- GitHub Actions annotations reporter (`--format github`): emits workflow
+  commands so findings appear inline on pull requests.
+- Composite GitHub Action (`action.yml`): run ActionAudit in any repository
+  with `uses: YusufKaramuk1/actionaudit@v0.3.0`.
+
 ## [0.2.0] - 2026-05-21
 
 ### Added
