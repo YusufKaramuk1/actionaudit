@@ -61,3 +61,9 @@ def test_scan_loads_custom_rules_from_rules_dir(fixtures_dir: Path) -> None:
     report = scan(target, rules_dir=fixtures_dir / "custom_rules")
     rule_ids = {f.rule_id for f in report.findings}
     assert "custom-no-echo" in rule_ids
+
+
+def test_scan_includes_posture(fixtures_dir: Path) -> None:
+    report = scan(fixtures_dir / "vulnerable")
+    assert report.posture.total_workflows == len(report.scanned_files)
+    assert report.posture.total_workflows > 0

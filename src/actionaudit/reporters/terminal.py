@@ -130,4 +130,46 @@ def _render_summary(console: Console, report: ScanReport) -> None:
         line = Text("  Overall severity: ")
         line.append(overall.value, style=_SEVERITY_STYLE[overall])
         console.print(line)
+
+    _render_posture(console, report)
     console.print()
+
+
+def _render_posture(console: Console, report: ScanReport) -> None:
+    posture = report.posture
+    if not posture.total_workflows:
+        return
+
+    console.print()
+    console.print(Text("  Posture", style="bold"))
+    console.print(
+        Text(
+            f"    Workflows with explicit permissions: "
+            f"{posture.workflows_with_permissions}/{posture.total_workflows}",
+            style="dim",
+        )
+    )
+    if posture.total_third_party_uses:
+        console.print(
+            Text(
+                f"    Third-party actions SHA-pinned: "
+                f"{posture.pinned_third_party_uses}/{posture.total_third_party_uses}",
+                style="dim",
+            )
+        )
+    if posture.total_checkouts:
+        console.print(
+            Text(
+                f"    Checkouts with persist-credentials disabled: "
+                f"{posture.checkouts_with_persist_false}/{posture.total_checkouts}",
+                style="dim",
+            )
+        )
+    if posture.pull_request_target_workflows:
+        console.print(
+            Text(
+                f"    Workflows using pull_request_target: "
+                f"{posture.pull_request_target_workflows}",
+                style="dim",
+            )
+        )

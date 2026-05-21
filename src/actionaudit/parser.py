@@ -143,3 +143,23 @@ def parse_ignore_directives(raw_text: str) -> dict[int, set[str]]:
                 token.strip() for token in rest.split(",") if token.strip()
             }
     return directives
+
+
+def workflow_triggers(workflow: WorkflowFile) -> set[str]:
+    """Return the set of trigger event names from a workflow's ``on:`` block.
+
+    Handles YAML's bare-``on`` quirk (it can parse as the boolean ``True``) and
+    the string / list / mapping forms an ``on:`` value may take.
+    """
+    if not workflow.is_valid:
+        return set()
+    on_value = workflow.parsed.get("on")
+    if on_value is None:
+        on_value = workflow.parsed.get(True)
+    if isinstance(on_value, str):
+        return {on_value}
+    if isinstance(on_value, list):
+        return {str(item) for item in on_value}
+    if isinstance(on_value, dict):
+        return {str(key) for key in on_value}
+    return set()

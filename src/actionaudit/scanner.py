@@ -4,8 +4,9 @@ import time
 from pathlib import Path
 
 from actionaudit.config import Config, load_config
-from actionaudit.models import Finding, ScanReport
+from actionaudit.models import Finding, ScanReport, WorkflowFile
 from actionaudit.parser import parse_ignore_directives, parse_workflow
+from actionaudit.posture import analyze_posture
 from actionaudit.rules import get_all_rules, load_rules_from_dir
 
 _WORKFLOW_EXTENSIONS = (".yml", ".yaml")
@@ -74,6 +75,7 @@ def scan(
     findings: list[Finding] = []
     scanned: list[Path] = []
     skipped: list[tuple[Path, str]] = []
+    valid_workflows: list[WorkflowFile] = []
 
     for path in discover_workflows(target):
         workflow = parse_workflow(path)
@@ -85,6 +87,7 @@ def scan(
             continue
 
         scanned.append(path)
+        valid_workflows.append(workflow)
         directives = parse_ignore_directives(workflow.raw_text)
         for rule in rules:
             for finding in rule.check(workflow):
@@ -101,4 +104,5 @@ def scan(
         scanned_files=scanned,
         skipped=skipped,
         duration_ms=duration_ms,
+        posture=analyze_posture(valid_workflows),
     )

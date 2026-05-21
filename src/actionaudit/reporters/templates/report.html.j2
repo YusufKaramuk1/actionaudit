@@ -111,6 +111,33 @@
   </div>
   {% endif %}
 
+  {% set p = report.posture %}
+  {% if p.total_workflows %}
+  <div class="section-title">CI/CD posture</div>
+  <div class="grid">
+    <div class="stat">
+      <div class="n">{{ p.workflows_with_permissions }}/{{ p.total_workflows }}</div>
+      <div class="l">explicit permissions</div>
+    </div>
+    {% if p.total_third_party_uses %}
+    <div class="stat">
+      <div class="n">{{ p.pinned_third_party_uses }}/{{ p.total_third_party_uses }}</div>
+      <div class="l">actions SHA-pinned</div>
+    </div>
+    {% endif %}
+    {% if p.total_checkouts %}
+    <div class="stat">
+      <div class="n">{{ p.checkouts_with_persist_false }}/{{ p.total_checkouts }}</div>
+      <div class="l">checkout persist off</div>
+    </div>
+    {% endif %}
+    <div class="stat">
+      <div class="n">{{ p.pull_request_target_workflows }}</div>
+      <div class="l">pull_request_target</div>
+    </div>
+  </div>
+  {% endif %}
+
   {% set cls_map = {'critical': 'crit', 'high': 'high', 'medium': 'med', 'low': 'low', 'info': 'info'} %}
   <div class="section-title">Findings</div>
   {% if findings %}

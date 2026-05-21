@@ -1,6 +1,6 @@
 """Core data models for actionaudit."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from pathlib import Path
 from typing import Any
@@ -107,6 +107,19 @@ class Finding:
 
 
 @dataclass
+class PostureSummary:
+    """Aggregate, mostly-positive CI/CD posture metrics across scanned workflows."""
+
+    total_workflows: int = 0
+    workflows_with_permissions: int = 0
+    pull_request_target_workflows: int = 0
+    total_third_party_uses: int = 0
+    pinned_third_party_uses: int = 0
+    total_checkouts: int = 0
+    checkouts_with_persist_false: int = 0
+
+
+@dataclass
 class ScanReport:
     """Aggregated result of scanning one or more workflow files."""
 
@@ -114,6 +127,7 @@ class ScanReport:
     scanned_files: list[Path]
     skipped: list[tuple[Path, str]]
     duration_ms: int
+    posture: PostureSummary = field(default_factory=PostureSummary)
 
     @property
     def total_count(self) -> int:

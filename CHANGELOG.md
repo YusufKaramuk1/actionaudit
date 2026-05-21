@@ -10,10 +10,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - Security score: a 0-100 severity-weighted score with an A-F letter grade,
   shown in the terminal, JSON, and HTML reports.
+- CI/CD posture summary: positive metrics across the scanned workflows
+  (explicit permissions, SHA-pinned third-party actions, checkout credential
+  hygiene, `pull_request_target` usage), shown in all three report formats.
 
 ### Changed
 
-- JSON output schema bumped to 1.1: `summary` now includes `score` and `grade`.
+- JSON output schema bumped to 1.1: `summary` now includes `score` and
+  `grade`, and a top-level `posture` block is added.
 
 ## [1.0.0] - 2026-05-21
 

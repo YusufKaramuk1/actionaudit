@@ -31,6 +31,7 @@ def render(report: ScanReport) -> str:
     """Return the scan report as a pretty-printed JSON string."""
     categories = {rule.rule_id: rule.category.value for rule in get_all_rules()}
     overall = report.overall_severity
+    posture = report.posture
     payload: dict[str, Any] = {
         "schema_version": SCHEMA_VERSION,
         "scan_metadata": {
@@ -54,6 +55,15 @@ def render(report: ScanReport) -> str:
             "low": report.count(Severity.LOW),
             "info": report.count(Severity.INFO),
             "overall_severity": overall.value if overall is not None else None,
+        },
+        "posture": {
+            "total_workflows": posture.total_workflows,
+            "workflows_with_permissions": posture.workflows_with_permissions,
+            "pull_request_target_workflows": posture.pull_request_target_workflows,
+            "total_third_party_uses": posture.total_third_party_uses,
+            "pinned_third_party_uses": posture.pinned_third_party_uses,
+            "total_checkouts": posture.total_checkouts,
+            "checkouts_with_persist_false": posture.checkouts_with_persist_false,
         },
         "findings": [_finding_dict(finding, categories) for finding in report.findings],
     }

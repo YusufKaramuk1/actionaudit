@@ -58,6 +58,13 @@ def test_json_reporter_empty_report() -> None:
     assert payload["summary"]["overall_severity"] is None
 
 
+def test_json_reporter_includes_posture(fixtures_dir: Path) -> None:
+    report = scan(fixtures_dir / "vulnerable" / "pwn_request.yml")
+    payload = json.loads(json_reporter.render(report))
+    assert payload["posture"]["total_workflows"] == 1
+    assert payload["posture"]["pull_request_target_workflows"] == 1
+
+
 # --- HTML reporter ---------------------------------------------------------
 
 
@@ -75,6 +82,8 @@ def test_html_reporter_produces_html_document(fixtures_dir: Path) -> None:
     # The security score card must be present.
     assert "Security score" in out
     assert "Grade" in out
+    # The CI/CD posture section must be present.
+    assert "CI/CD posture" in out
 
 
 def test_html_reporter_empty_report() -> None:
