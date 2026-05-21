@@ -8,7 +8,7 @@ from actionaudit import __version__
 from actionaudit.models import Finding, ScanReport, Severity
 from actionaudit.rules import get_all_rules
 
-SCHEMA_VERSION = "1.0"
+SCHEMA_VERSION = "1.1"
 
 
 def _finding_dict(finding: Finding, categories: dict[str, str]) -> dict[str, Any]:
@@ -46,6 +46,8 @@ def render(report: ScanReport) -> str:
         },
         "summary": {
             "total": report.total_count,
+            "score": report.score,
+            "grade": report.grade,
             "critical": report.count(Severity.CRITICAL),
             "high": report.count(Severity.HIGH),
             "medium": report.count(Severity.MEDIUM),

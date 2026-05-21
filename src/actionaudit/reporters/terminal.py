@@ -22,6 +22,14 @@ _SEVERITY_ORDER = (
     Severity.INFO,
 )
 
+_GRADE_STYLE: dict[str, str] = {
+    "A": "bold green",
+    "B": "green",
+    "C": "bold yellow",
+    "D": "red",
+    "F": "bold white on red",
+}
+
 
 def render(report: ScanReport, console: Console | None = None) -> None:
     """Print a human-readable scan report to the terminal."""
@@ -109,6 +117,13 @@ def _render_summary(console: Console, report: ScanReport) -> None:
             style="dim",
         )
     )
+
+    grade = report.grade
+    score_line = Text("  Security score: ")
+    score_line.append(
+        f" {report.score}/100  Grade {grade} ", style=_GRADE_STYLE[grade]
+    )
+    console.print(score_line)
 
     overall = report.overall_severity
     if overall is not None:

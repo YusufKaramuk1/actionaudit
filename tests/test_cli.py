@@ -46,7 +46,7 @@ def test_scan_json_format(fixtures_dir: Path) -> None:
     result = CliRunner().invoke(cli, ["scan", str(target), "--format", "json"])
     assert result.exit_code == 0
     payload = json.loads(result.output)
-    assert payload["schema_version"] == "1.0"
+    assert payload["schema_version"] == "1.1"
     assert payload["summary"]["total"] >= 1
 
 

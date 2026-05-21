@@ -138,3 +138,32 @@ class ScanReport:
         for finding in self.findings:
             grouped.setdefault(finding.workflow_path, []).append(finding)
         return grouped
+
+    @property
+    def score(self) -> int:
+        """A 0-100 security score; higher is better.
+
+        Each finding subtracts a severity-weighted penalty from a perfect 100,
+        clamped so the score never drops below zero.
+        """
+        penalty = (
+            self.count(Severity.CRITICAL) * 25
+            + self.count(Severity.HIGH) * 15
+            + self.count(Severity.MEDIUM) * 7
+            + self.count(Severity.LOW) * 2
+        )
+        return max(0, 100 - penalty)
+
+    @property
+    def grade(self) -> str:
+        """A letter grade (A-F) derived from :attr:`score`."""
+        score = self.score
+        if score >= 90:
+            return "A"
+        if score >= 75:
+            return "B"
+        if score >= 60:
+            return "C"
+        if score >= 40:
+            return "D"
+        return "F"

@@ -16,9 +16,22 @@
          font-family: -apple-system, "Segoe UI", Roboto, sans-serif; line-height: 1.5; }
   .wrap { max-width: 960px; margin: 0 auto; padding: 32px 20px; }
   h1 { font-size: 24px; margin: 0 0 4px; }
-  .sub { color: var(--muted); font-size: 13px; margin-bottom: 24px; }
+  .sub { color: var(--muted); font-size: 13px; margin-bottom: 20px; }
   .section-title { font-size: 13px; color: var(--muted); margin: 26px 0 10px;
                    text-transform: uppercase; letter-spacing: .5px; }
+  .score { display: flex; align-items: center; gap: 16px;
+           background: var(--panel); border: 1px solid var(--border);
+           border-radius: 10px; padding: 18px 22px; margin-bottom: 8px; }
+  .score-num { font-size: 46px; font-weight: 800; line-height: 1; }
+  .score-num span { font-size: 18px; color: var(--muted); font-weight: 400; }
+  .score-grade { font-size: 16px; font-weight: 700; padding: 6px 16px;
+                 border-radius: 6px; }
+  .score-main { color: var(--muted); font-size: 13px; }
+  .g-a { color: var(--ok); } .gb-a { background: var(--ok); color: #0d1117; }
+  .g-b { color: #56d364; } .gb-b { background: #56d364; color: #0d1117; }
+  .g-c { color: var(--medium); } .gb-c { background: var(--medium); color: #0d1117; }
+  .g-d { color: var(--high); } .gb-d { background: var(--high); color: #0d1117; }
+  .g-f { color: var(--critical); } .gb-f { background: var(--critical); color: #0d1117; }
   .grid { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 8px; }
   .stat { background: var(--panel); border: 1px solid var(--border);
           border-radius: 8px; padding: 14px 18px; min-width: 92px; }
@@ -65,6 +78,15 @@
   <div class="sub">
     actionaudit {{ tool_version }} &middot; {{ timestamp }} &middot;
     {{ report.scanned_files | length }} file(s) scanned in {{ report.duration_ms }} ms
+  </div>
+
+  {% set grade_lower = report.grade | lower %}
+  <div class="score">
+    <div class="score-num g-{{ grade_lower }}">{{ report.score }}<span>/100</span></div>
+    <div class="score-grade gb-{{ grade_lower }}">Grade {{ report.grade }}</div>
+    <div class="score-main">
+      Security score &mdash; severity-weighted across {{ report.total_count }} finding(s).
+    </div>
   </div>
 
   <div class="section-title">Findings by severity</div>

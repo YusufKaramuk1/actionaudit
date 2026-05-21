@@ -13,9 +13,11 @@ from actionaudit.scanner import scan
 def test_json_reporter_produces_valid_json(fixtures_dir: Path) -> None:
     report = scan(fixtures_dir / "vulnerable" / "expression_injection.yml")
     payload = json.loads(json_reporter.render(report))
-    assert payload["schema_version"] == "1.0"
+    assert payload["schema_version"] == "1.1"
     assert payload["scan_metadata"]["tool"] == "actionaudit"
     assert payload["summary"]["total"] == len(payload["findings"])
+    assert isinstance(payload["summary"]["score"], int)
+    assert payload["summary"]["grade"] in ("A", "B", "C", "D", "F")
     rule_ids = {finding["rule_id"] for finding in payload["findings"]}
     assert "expression-injection-in-run" in rule_ids
 
@@ -70,6 +72,9 @@ def test_html_reporter_produces_html_document(fixtures_dir: Path) -> None:
     # OWASP category mapping must be surfaced.
     assert "OWASP CI/CD Top 10" in out
     assert "CICD-SEC" in out
+    # The security score card must be present.
+    assert "Security score" in out
+    assert "Grade" in out
 
 
 def test_html_reporter_empty_report() -> None:

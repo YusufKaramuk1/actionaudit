@@ -4,6 +4,17 @@ All notable changes to ActionAudit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Security score: a 0-100 severity-weighted score with an A-F letter grade,
+  shown in the terminal, JSON, and HTML reports.
+
+### Changed
+
+- JSON output schema bumped to 1.1: `summary` now includes `score` and `grade`.
+
 ## [1.0.0] - 2026-05-21
 
 ### Changed
