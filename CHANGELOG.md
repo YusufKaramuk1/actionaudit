@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   JSON, HTML, and SARIF output and in `explain` / `list-rules`.
 - Inline ignore directives: `# actionaudit: ignore <rule-id>` in a workflow
   comment suppresses findings on that line (and the line below it).
+- Configuration via a `[tool.actionaudit]` table in `pyproject.toml`:
+  `disabled_rules` and per-rule severity overrides.
 - Four additional security rules:
   - `inline-curl-pipe-bash` (MEDIUM)
   - `workflow-dispatch-input-injection` (HIGH)

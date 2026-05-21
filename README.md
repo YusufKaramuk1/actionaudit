@@ -7,8 +7,8 @@ Static security scanner for GitHub Actions workflows.
 
 ActionAudit reads `.github/workflows/*.yml`, parses the YAML, and runs a set of
 security rules over it. Each finding comes with the exact location
-(`workflow.yml:42`), a severity, a human-readable explanation of *why* it is
-dangerous, and *how* to fix it.
+(`workflow.yml:42`), a severity, an OWASP CI/CD category, a human-readable
+explanation of *why* it is dangerous, and *how* to fix it.
 
 ## Why ActionAudit
 
@@ -16,8 +16,10 @@ dangerous, and *how* to fix it.
   the core. The same input always produces the same output.
 - **Educational.** Every finding explains the risk and the fix, not just the
   rule name. `actionaudit explain <rule>` gives the full background.
-- **Multiple output formats.** A coloured terminal report, a dark-theme HTML
-  report, and machine-readable JSON.
+- **Standards-aligned.** Every rule maps to an
+  [OWASP Top 10 CI/CD Security Risk](https://owasp.org/www-project-top-10-ci-cd-security-risks/).
+- **Multiple output formats.** Coloured terminal, dark-theme HTML, JSON, and
+  SARIF for GitHub Code Scanning.
 
 ## Install
 
@@ -39,8 +41,9 @@ actionaudit scan .
 # Scan a specific file or directory
 actionaudit scan .github/workflows/ci.yml
 
-# Produce an HTML report
+# Produce an HTML or SARIF report
 actionaudit scan . --format html --output report.html
+actionaudit scan . --format sarif --output results.sarif
 
 # Fail the process (exit 1) if a HIGH+ finding exists -- useful in CI
 actionaudit scan . --fail-on high
@@ -52,20 +55,44 @@ actionaudit explain expression-injection-in-run
 
 ## Rules
 
-| ID | Severity | What it catches |
-|---|---|---|
-| `expression-injection-in-run` | CRITICAL | Untrusted `${{ ... }}` input interpolated into a `run:` script |
-| `pull-request-target-with-checkout` | CRITICAL | `pull_request_target` workflow checking out PR head code (Pwn Request) |
-| `github-token-write-all` | HIGH | `permissions: write-all` or no `permissions:` block |
-| `third-party-action-not-pinned-sha` | HIGH | Third-party action pinned to a mutable tag instead of a commit SHA |
-| `hardcoded-secret` | HIGH | Literal credential (AWS / GitHub / Stripe / Slack / PEM) in the file |
-| `persist-credentials-default-true` | MEDIUM | `actions/checkout` keeping the default credential persistence |
+| ID | Severity | OWASP | What it catches |
+|---|---|---|---|
+| `expression-injection-in-run` | CRITICAL | CICD-SEC-4 | Untrusted `${{ ... }}` input interpolated into a `run:` script |
+| `pull-request-target-with-checkout` | CRITICAL | CICD-SEC-4 | `pull_request_target` workflow checking out PR head code (Pwn Request) |
+| `workflow-dispatch-input-injection` | HIGH | CICD-SEC-4 | Workflow input interpolated into a `run:` script |
+| `github-token-write-all` | HIGH | CICD-SEC-5 | `permissions: write-all` or no `permissions:` block |
+| `third-party-action-not-pinned-sha` | HIGH | CICD-SEC-3 | Third-party action pinned to a mutable tag instead of a commit SHA |
+| `hardcoded-secret` | HIGH | CICD-SEC-6 | Literal credential (AWS / GitHub / Stripe / Slack / PEM) in the file |
+| `inline-curl-pipe-bash` | MEDIUM | CICD-SEC-3 | Remote script piped straight into a shell |
+| `persist-credentials-default-true` | MEDIUM | CICD-SEC-6 | `actions/checkout` keeping the default credential persistence |
+| `self-hosted-runner-fork-trigger` | MEDIUM | CICD-SEC-7 | Self-hosted runner reachable by forked pull requests |
+| `bash-with-set-x` | LOW | CICD-SEC-10 | Shell debug tracing (`set -x`) that can leak secrets into logs |
 
 ## Output formats
 
 - `--format terminal` (default) — coloured summary in the console.
 - `--format json` — stable JSON schema for automation.
 - `--format html` — standalone dark-theme report with per-finding remediation.
+- `--format sarif` — SARIF v2.1.0 for GitHub Code Scanning.
+
+## Configuration
+
+Add a `[tool.actionaudit]` section to `pyproject.toml`:
+
+```toml
+[tool.actionaudit]
+disabled_rules = ["bash-with-set-x"]
+
+[tool.actionaudit.severity]
+hardcoded-secret = "critical"
+```
+
+To suppress a single finding, add an inline comment on the offending line (or
+the line just above it):
+
+```yaml
+- uses: tj-actions/changed-files@v44  # actionaudit: ignore third-party-action-not-pinned-sha
+```
 
 ## Philosophy
 
@@ -90,8 +117,8 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for how to add a rule.
 ActionAudit, GitHub Actions iş akışlarındaki (`.github/workflows/*.yml`)
 güvenlik açıklarını ve hatalı yapılandırmaları statik olarak tespit eden,
 yerel çalışan, deterministik bir CLI tarayıcısıdır. Her bulgu; kesin konum
-(`workflow.yml:42`), önem derecesi, riskin *neden* tehlikeli olduğunun
-açıklaması ve *nasıl* düzeltileceği ile birlikte raporlanır.
+(`workflow.yml:42`), önem derecesi, OWASP CI/CD kategorisi, riskin *neden*
+tehlikeli olduğunun açıklaması ve *nasıl* düzeltileceği ile birlikte raporlanır.
 
 ```bash
 git clone https://github.com/YusufKaramuk1/actionaudit.git
@@ -99,10 +126,10 @@ cd actionaudit && pip install -e .
 actionaudit scan .
 ```
 
-v0.1 altı kural içerir: ifade enjeksiyonu (expression injection), Pwn Request
-(`pull_request_target`), aşırı geniş `GITHUB_TOKEN` izinleri, SHA'ya
-sabitlenmemiş üçüncü parti action'lar, gömülü secret'lar ve `actions/checkout`
-kimlik bilgisi kalıcılığı. Çıktı biçimleri: terminal, JSON ve koyu temalı HTML.
+Şu an 10 kural içerir ve her biri OWASP Top 10 CI/CD risk kategorilerinden
+biriyle eşleştirilmiştir. Çıktı biçimleri: terminal, JSON, koyu temalı HTML ve
+SARIF. Bulgular `pyproject.toml` içindeki `[tool.actionaudit]` bölümünden veya
+satır içi `# actionaudit: ignore` yorumlarıyla bastırılabilir.
 
 ## License
 
