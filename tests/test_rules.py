@@ -4,7 +4,7 @@ from pathlib import Path
 
 from actionaudit.models import OwaspCategory
 from actionaudit.parser import parse_workflow
-from actionaudit.rules import get_all_rules
+from actionaudit.rules import get_all_rules, load_rules_from_dir
 from actionaudit.rules.bash_set_x import BashSetXRule
 from actionaudit.rules.expression_injection import ExpressionInjectionRule
 from actionaudit.rules.github_token_perms import GithubTokenPermissionsRule
@@ -36,6 +36,15 @@ def test_registry_discovers_all_rules() -> None:
 def test_every_rule_declares_an_owasp_category() -> None:
     for rule in get_all_rules():
         assert isinstance(rule.category, OwaspCategory)
+
+
+def test_load_rules_from_dir_discovers_custom_rule(fixtures_dir: Path) -> None:
+    custom = load_rules_from_dir(fixtures_dir / "custom_rules")
+    assert {rule.rule_id for rule in custom} == {"custom-no-echo"}
+
+
+def test_load_rules_from_dir_missing_directory(tmp_path: Path) -> None:
+    assert load_rules_from_dir(tmp_path / "does-not-exist") == []
 
 
 # --- expression-injection-in-run -------------------------------------------

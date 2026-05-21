@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 - pre-commit hook support via `.pre-commit-hooks.yaml`: use ActionAudit with
   `repo: https://github.com/YusufKaramuk1/actionaudit` in `.pre-commit-config.yaml`.
+- Custom rules (BYOR): `--rules-dir <dir>` loads user-defined rule modules
+  alongside the built-in rules.
 
 ## [0.3.0] - 2026-05-21
 

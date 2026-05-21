@@ -56,14 +56,22 @@ def cli() -> None:
     default=None,
     help="Exit with code 1 when a finding at or above this severity exists.",
 )
+@click.option(
+    "--rules-dir",
+    "rules_dir",
+    type=click.Path(exists=True, file_okay=False, path_type=Path),
+    default=None,
+    help="Load extra user-defined rule modules from this directory.",
+)
 def scan(
     path: Path,
     output_format: str,
     output_path: Path | None,
     fail_on: str | None,
+    rules_dir: Path | None,
 ) -> None:
     """Scan PATH for GitHub Actions workflow security issues."""
-    report = run_scan(path)
+    report = run_scan(path, rules_dir=rules_dir)
     fmt = output_format.lower()
 
     if fmt == "terminal":

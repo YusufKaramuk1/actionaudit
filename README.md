@@ -123,6 +123,20 @@ the line just above it):
 - uses: tj-actions/changed-files@v44  # actionaudit: ignore third-party-action-not-pinned-sha
 ```
 
+## Custom rules
+
+Write organisation-specific rules and load them alongside the built-in ones
+with `--rules-dir`:
+
+```bash
+actionaudit scan . --rules-dir ./company-rules/
+```
+
+Each `.py` file in the directory may define `Rule` subclasses (see
+[CONTRIBUTING.md](CONTRIBUTING.md) for the contract). **Note:** `--rules-dir`
+imports and executes the Python files it finds — only point it at directories
+you trust.
+
 ## Philosophy
 
 ActionAudit only scans GitHub Actions workflow files. It is not a runtime

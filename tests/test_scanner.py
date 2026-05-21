@@ -52,3 +52,12 @@ def test_scan_respects_inline_ignore(fixtures_dir: Path) -> None:
     report = scan(fixtures_dir / "ignore_directive.yml")
     rule_ids = {f.rule_id for f in report.findings}
     assert "expression-injection-in-run" not in rule_ids
+
+
+def test_scan_loads_custom_rules_from_rules_dir(fixtures_dir: Path) -> None:
+    # token_permissions.yml has a `run: echo "build"` step that the example
+    # custom rule (custom-no-echo) flags.
+    target = fixtures_dir / "safe" / "token_permissions.yml"
+    report = scan(target, rules_dir=fixtures_dir / "custom_rules")
+    rule_ids = {f.rule_id for f in report.findings}
+    assert "custom-no-echo" in rule_ids

@@ -6,7 +6,7 @@ from pathlib import Path
 from actionaudit.config import Config, load_config
 from actionaudit.models import Finding, ScanReport
 from actionaudit.parser import parse_ignore_directives, parse_workflow
-from actionaudit.rules import get_all_rules
+from actionaudit.rules import get_all_rules, load_rules_from_dir
 
 _WORKFLOW_EXTENSIONS = (".yml", ".yaml")
 _WORKFLOWS_DIR = Path(".github") / "workflows"
@@ -50,21 +50,26 @@ def _is_ignored(finding: Finding, directives: dict[int, set[str]]) -> bool:
     return False
 
 
-def scan(target: Path, config: Config | None = None) -> ScanReport:
+def scan(
+    target: Path,
+    config: Config | None = None,
+    rules_dir: Path | None = None,
+) -> ScanReport:
     """Scan ``target`` and return an aggregated :class:`ScanReport`.
 
     Configuration is read from the nearest ``pyproject.toml`` unless an explicit
-    :class:`Config` is passed. Never raises on bad input: unreadable or
-    malformed files are recorded in ``ScanReport.skipped`` and scanning
-    continues across the rest.
+    :class:`Config` is passed. ``rules_dir`` loads extra user-defined rules.
+    Never raises on bad input: unreadable or malformed files are recorded in
+    ``ScanReport.skipped`` and scanning continues across the rest.
     """
     start = time.perf_counter()
     if config is None:
         config = load_config(target)
 
-    rules = [
-        rule for rule in get_all_rules() if rule.rule_id not in config.disabled_rules
-    ]
+    rules = list(get_all_rules())
+    if rules_dir is not None:
+        rules.extend(load_rules_from_dir(rules_dir))
+    rules = [rule for rule in rules if rule.rule_id not in config.disabled_rules]
 
     findings: list[Finding] = []
     scanned: list[Path] = []
