@@ -4,6 +4,14 @@ All notable changes to ActionAudit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [1.0.0] - 2026-05-21
+
+### Changed
+
+- First stable release, published to PyPI — install with `pip install actionaudit`.
+- Automated PyPI publishing via a release-triggered workflow using trusted
+  publishing (OIDC, no stored credentials).
+
 ## [0.4.0] - 2026-05-21
 
 ### Added
