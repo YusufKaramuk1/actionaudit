@@ -1,5 +1,6 @@
 # ActionAudit
 
+[![PyPI](https://img.shields.io/pypi/v/actionaudit)](https://pypi.org/project/actionaudit/)
 [![Tests](https://github.com/YusufKaramuk1/actionaudit/actions/workflows/tests.yml/badge.svg)](https://github.com/YusufKaramuk1/actionaudit/actions/workflows/tests.yml)
 [![Self-Scan](https://github.com/YusufKaramuk1/actionaudit/actions/workflows/self-scan.yml/badge.svg)](https://github.com/YusufKaramuk1/actionaudit/actions/workflows/self-scan.yml)
 
@@ -61,7 +62,7 @@ actionaudit explain expression-injection-in-run
 Add ActionAudit to any repository's workflow:
 
 ```yaml
-- uses: YusufKaramuk1/actionaudit@v0.3.0
+- uses: YusufKaramuk1/actionaudit@v1.0.0
   with:
     path: .github/workflows
     fail-on: high
@@ -77,7 +78,7 @@ Add ActionAudit to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/YusufKaramuk1/actionaudit
-    rev: v0.4.0
+    rev: v1.0.0
     hooks:
       - id: actionaudit
 ```

@@ -1,49 +1,51 @@
 # Roadmap
 
-## v0.1.0 — released
+## v1.0.0 — released
 
-Six security rules; terminal, JSON, and HTML reporters; `scan`, `list-rules`,
-and `explain` CLI commands; CI with self-scan.
+First stable release on PyPI. 10 security rules mapped to OWASP Top 10 CI/CD;
+terminal / JSON / HTML / SARIF / GitHub-annotations reporters; `scan`,
+`list-rules`, `explain` CLI; composite GitHub Action; pre-commit hook; custom
+rules via `--rules-dir`.
 
-## v0.2.0 — in progress
+## v1.0.1 — documentation cleanup
 
-- SARIF v2.1.0 output for GitHub Code Scanning. **(done)**
-- Additional security rules — total of ten. **(done)**
-- OWASP Top 10 CI/CD category mapping for every rule. **(done)**
-- Inline ignore comments (`# actionaudit: ignore <rule-id>`).
-- Configuration file support (`[tool.actionaudit]` in `pyproject.toml`):
-  per-repository severity overrides and disabled rules.
+- Refreshed README version references to v1.0.0; added a PyPI badge.
+- Repository description and topics on GitHub.
+- This roadmap.
 
-## v0.3.0
+## v1.1.0 — security score & posture summary
 
-- GitHub Action package (`action.yml`) and Marketplace listing.
-- GitHub annotations output (`::error file=...,line=...::`) so findings appear
-  inline on pull requests when ActionAudit runs as an Action.
+- A 0-100 security score with a letter grade per scan, shown in the terminal,
+  JSON, and HTML reports.
+- A repository CI/CD posture summary: how many workflows pin third-party
+  actions, declare explicit permissions, disable credential persistence, etc.
 
-## v0.4.0
+## v1.2.0 — supply-chain rules
 
-- Pre-commit hook integration.
-- Custom rules (BYOR): a `--rules-dir` option to load user-defined rule
-  modules, turning ActionAudit into a Policy-as-Code platform. Needs a careful
-  API: rule discovery, error handling, and an explicit "this executes code"
-  warning, since loading external Python is itself a trust boundary.
+- `dangerous-workflow-run-chain` — a privileged `workflow_run` workflow that
+  consumes a lower-privileged workflow's output.
+- `untrusted-artifact-execution` — downloading an artifact and executing it.
+- `actions-cache-poisoning-risk` — cache keys derived from PR-controlled input.
 
-## v1.0.0
+## v1.3.0 — declarative policy
 
-- PyPI release.
-- Documentation polish.
+- `--profile strict | balanced | education` rule presets.
+- A YAML policy file as a safe alternative to `--rules-dir` (no code execution).
 
-## Considered but deferred
+## v1.4.0 — lite taint analysis
 
+- Track untrusted data (`github.event.*`, `inputs.*`, `github.head_ref`) as it
+  flows through `env` and shell variables into `run` / checkout / docker
+  sinks, catching injections that plain pattern matching misses.
+
+## Considered
+
+- `actionaudit doctor` — folded into the v1.1 posture summary.
+- Secure workflow template generator (`actionaudit init`) — useful, but close
+  to the auto-fix territory the project deliberately avoids; revisit later.
 - Reusable workflow (`workflow_call`) and composite action analysis.
-- Pwn Request variants beyond explicit checkout (requires taint analysis).
-- Entropy-based secret detection (the current rule stays format-anchored).
-- `continue-on-error-on-security-step` rule — needs a reliable definition of
-  what counts as a "security step" before it can avoid false positives.
 
 ## Will not do
-
-These are intentionally out of scope — ActionAudit stays focused.
 
 - GitLab CI, Bitbucket Pipelines, or other CI platforms.
 - Runtime / workflow-execution monitoring.
