@@ -9,7 +9,7 @@ from rich.console import Console
 
 from actionaudit import __version__
 from actionaudit.models import ScanReport, Severity
-from actionaudit.reporters import html, json_reporter, sarif, terminal
+from actionaudit.reporters import github, html, json_reporter, sarif, terminal
 from actionaudit.rules import get_all_rules
 from actionaudit.scanner import scan as run_scan
 
@@ -18,6 +18,7 @@ _RENDERERS: dict[str, Callable[[ScanReport], str]] = {
     "json": json_reporter.render,
     "html": html.render,
     "sarif": sarif.render,
+    "github": github.render,
 }
 
 
@@ -36,7 +37,9 @@ def cli() -> None:
 @click.option(
     "--format",
     "output_format",
-    type=click.Choice(["terminal", "json", "html", "sarif"], case_sensitive=False),
+    type=click.Choice(
+        ["terminal", "json", "html", "sarif", "github"], case_sensitive=False
+    ),
     default="terminal",
     help="Output format (default: terminal).",
 )

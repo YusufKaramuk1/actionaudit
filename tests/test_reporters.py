@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 
 from actionaudit.models import ScanReport
-from actionaudit.reporters import html, json_reporter, sarif
+from actionaudit.reporters import github, html, json_reporter, sarif
 from actionaudit.scanner import scan
 
 # --- JSON reporter ---------------------------------------------------------
@@ -117,3 +117,26 @@ def test_sarif_empty_report() -> None:
     payload = json.loads(sarif.render(report))
     assert payload["runs"][0]["results"] == []
     assert len(payload["runs"][0]["tool"]["driver"]["rules"]) == 10
+
+
+# --- GitHub annotations reporter -------------------------------------------
+
+
+def test_github_reporter_emits_workflow_commands(fixtures_dir: Path) -> None:
+    report = scan(fixtures_dir / "vulnerable" / "expression_injection.yml")
+    out = github.render(report)
+    lines = out.splitlines()
+    assert lines
+    assert all(line.startswith(("::error ", "::warning ", "::notice ")) for line in lines)
+    assert any("title=expression-injection-in-run" in line for line in lines)
+
+
+def test_github_reporter_one_command_per_finding(fixtures_dir: Path) -> None:
+    report = scan(fixtures_dir / "vulnerable" / "expression_injection.yml")
+    out = github.render(report)
+    assert len(out.splitlines()) == report.total_count
+
+
+def test_github_reporter_empty_report() -> None:
+    report = ScanReport(findings=[], scanned_files=[], skipped=[], duration_ms=0)
+    assert github.render(report) == ""
