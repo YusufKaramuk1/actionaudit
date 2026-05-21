@@ -21,7 +21,7 @@ keywords = [
     "sast",
 ]
 classifiers = [
-    "Development Status :: 2 - Pre-Alpha",
+    "Development Status :: 5 - Production/Stable",
     "Environment :: Console",
     "Intended Audience :: Developers",
     "Intended Audience :: System Administrators",
@@ -58,6 +58,7 @@ actionaudit = "actionaudit.cli:cli"
 Homepage = "https://github.com/YusufKaramuk1/actionaudit"
 Repository = "https://github.com/YusufKaramuk1/actionaudit"
 Issues = "https://github.com/YusufKaramuk1/actionaudit/issues"
+Changelog = "https://github.com/YusufKaramuk1/actionaudit/blob/main/CHANGELOG.md"
 
 [tool.setuptools.packages.find]
 where = ["src"]

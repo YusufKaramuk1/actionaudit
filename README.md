@@ -23,12 +23,15 @@ explanation of *why* it is dangerous, and *how* to fix it.
 
 ## Install
 
-ActionAudit is pre-release; install it from source:
+```bash
+pip install actionaudit
+```
+
+Or from source:
 
 ```bash
 git clone https://github.com/YusufKaramuk1/actionaudit.git
 cd actionaudit
-python -m venv venv
 pip install -e .
 ```
 
