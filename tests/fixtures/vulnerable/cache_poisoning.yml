@@ -1,0 +1,13 @@
+name: Cache Poison
+on: pull_request
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/cache@v3
+        with:
+          path: node_modules
+          key: ${{ github.head_ref }}-build

@@ -1,0 +1,11 @@
+name: Safe Artifact
+on: push
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+      - run: ls ./artifact

@@ -6,6 +6,8 @@ from actionaudit.models import OwaspCategory
 from actionaudit.parser import parse_workflow
 from actionaudit.rules import get_all_rules, load_rules_from_dir
 from actionaudit.rules.bash_set_x import BashSetXRule
+from actionaudit.rules.cache_poisoning import CachePoisoningRule
+from actionaudit.rules.dangerous_workflow_run import DangerousWorkflowRunChainRule
 from actionaudit.rules.expression_injection import ExpressionInjectionRule
 from actionaudit.rules.github_token_perms import GithubTokenPermissionsRule
 from actionaudit.rules.hardcoded_secret import HardcodedSecretRule
@@ -14,6 +16,7 @@ from actionaudit.rules.persist_credentials import PersistCredentialsRule
 from actionaudit.rules.pull_request_target import PullRequestTargetCheckoutRule
 from actionaudit.rules.self_hosted_runner import SelfHostedRunnerRule
 from actionaudit.rules.unpinned_action import UnpinnedActionRule
+from actionaudit.rules.untrusted_artifact import UntrustedArtifactExecutionRule
 from actionaudit.rules.workflow_dispatch_input import WorkflowDispatchInputRule
 
 
@@ -30,6 +33,9 @@ def test_registry_discovers_all_rules() -> None:
         "workflow-dispatch-input-injection",
         "bash-with-set-x",
         "self-hosted-runner-fork-trigger",
+        "dangerous-workflow-run-chain",
+        "untrusted-artifact-execution",
+        "actions-cache-poisoning-risk",
     }
 
 
@@ -308,3 +314,75 @@ def test_self_hosted_ignores_safe_workflow(fixtures_dir: Path) -> None:
 def test_self_hosted_survives_broken_yaml(fixtures_dir: Path) -> None:
     wf = parse_workflow(fixtures_dir / "broken.yml")
     assert SelfHostedRunnerRule().check(wf) == []
+
+
+# --- dangerous-workflow-run-chain ------------------------------------------
+
+
+def test_dangerous_workflow_run_flags_vulnerable_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "vulnerable" / "dangerous_workflow_run.yml")
+    findings = DangerousWorkflowRunChainRule().check(wf)
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.rule_id == "dangerous-workflow-run-chain"
+    assert finding.severity.value == "HIGH"
+    # download-artifact `uses:` is on line 14 of the fixture.
+    assert finding.line == 14
+
+
+def test_dangerous_workflow_run_ignores_safe_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "safe" / "safe_workflow_run.yml")
+    assert DangerousWorkflowRunChainRule().check(wf) == []
+
+
+def test_dangerous_workflow_run_survives_broken_yaml(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "broken.yml")
+    assert DangerousWorkflowRunChainRule().check(wf) == []
+
+
+# --- untrusted-artifact-execution ------------------------------------------
+
+
+def test_untrusted_artifact_flags_vulnerable_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "vulnerable" / "untrusted_artifact.yml")
+    findings = UntrustedArtifactExecutionRule().check(wf)
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.rule_id == "untrusted-artifact-execution"
+    assert finding.severity.value == "HIGH"
+    # download-artifact `uses:` is on line 10 of the fixture.
+    assert finding.line == 10
+
+
+def test_untrusted_artifact_ignores_safe_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "safe" / "safe_artifact.yml")
+    assert UntrustedArtifactExecutionRule().check(wf) == []
+
+
+def test_untrusted_artifact_survives_broken_yaml(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "broken.yml")
+    assert UntrustedArtifactExecutionRule().check(wf) == []
+
+
+# --- actions-cache-poisoning-risk ------------------------------------------
+
+
+def test_cache_poisoning_flags_vulnerable_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "vulnerable" / "cache_poisoning.yml")
+    findings = CachePoisoningRule().check(wf)
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.rule_id == "actions-cache-poisoning-risk"
+    assert finding.severity.value == "MEDIUM"
+    # actions/cache `uses:` is on line 10 of the fixture.
+    assert finding.line == 10
+
+
+def test_cache_poisoning_ignores_safe_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "safe" / "safe_cache.yml")
+    assert CachePoisoningRule().check(wf) == []
+
+
+def test_cache_poisoning_survives_broken_yaml(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "broken.yml")
+    assert CachePoisoningRule().check(wf) == []

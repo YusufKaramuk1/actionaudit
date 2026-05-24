@@ -4,6 +4,18 @@ All notable changes to ActionAudit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- Three supply-chain rules (total 13):
+  - `dangerous-workflow-run-chain` (HIGH) — a `workflow_run` workflow that
+    consumes an upstream workflow's artifacts in a privileged context.
+  - `untrusted-artifact-execution` (HIGH) — a downloaded artifact executed
+    in the same job without verification.
+  - `actions-cache-poisoning-risk` (MEDIUM) — cache key derived from
+    PR-controlled input, allowing a poisoned cache slot.
+
 ## [1.1.0] - 2026-05-21
 
 ### Added

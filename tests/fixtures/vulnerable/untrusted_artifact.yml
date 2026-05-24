@@ -1,0 +1,13 @@
+name: Untrusted Artifact
+on: push
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+      - run: |
+          chmod +x ./artifact/build.sh
+          ./artifact/build.sh
