@@ -66,3 +66,24 @@ def test_scan_education_profile_disables_set_x_rule(fixtures_dir: Path) -> None:
     payload = json.loads(result.output)
     rule_ids = {f["rule_id"] for f in payload["findings"]}
     assert "bash-with-set-x" not in rule_ids
+
+
+def test_scan_baseline_suppresses_known_findings(
+    fixtures_dir: Path, tmp_path: Path
+) -> None:
+    target = fixtures_dir / "vulnerable" / "expression_injection.yml"
+    runner = CliRunner()
+    # Capture the current findings as a baseline.
+    first = runner.invoke(cli, ["scan", str(target), "--format", "json"])
+    assert first.exit_code == 0
+    baseline_file = tmp_path / "baseline.json"
+    baseline_file.write_text(first.output, encoding="utf-8")
+
+    # Re-run with --baseline: nothing new, so the report is empty.
+    second = runner.invoke(
+        cli,
+        ["scan", str(target), "--format", "json", "--baseline", str(baseline_file)],
+    )
+    assert second.exit_code == 0
+    payload = json.loads(second.output)
+    assert payload["findings"] == []

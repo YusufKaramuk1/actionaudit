@@ -1,5 +1,6 @@
 """Scan orchestration: discover workflow files, parse them, run all rules."""
 
+import json
 import time
 from pathlib import Path
 
@@ -51,15 +52,55 @@ def _is_ignored(finding: Finding, directives: dict[int, set[str]]) -> bool:
     return False
 
 
+def _fingerprint(finding: Finding) -> tuple[str, str, int]:
+    """Stable identity for a finding -- (rule_id, workflow_path, line)."""
+    return (finding.rule_id, str(finding.workflow_path), finding.line)
+
+
+def load_baseline_fingerprints(path: Path) -> set[tuple[str, str, int]]:
+    """Read a JSON scan report and return the fingerprints of its findings.
+
+    Used by ``--baseline`` to suppress already-known findings so a CI gate
+    only fails on new issues a pull request introduces. A missing or malformed
+    file yields an empty set rather than raising.
+    """
+    try:
+        data = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return set()
+    findings = data.get("findings", [])
+    if not isinstance(findings, list):
+        return set()
+    fingerprints: set[tuple[str, str, int]] = set()
+    for item in findings:
+        if not isinstance(item, dict):
+            continue
+        try:
+            fingerprints.add(
+                (
+                    str(item.get("rule_id", "")),
+                    str(item.get("workflow_path", "")),
+                    int(item.get("line", 0)),
+                )
+            )
+        except (TypeError, ValueError):
+            continue
+    return fingerprints
+
+
 def scan(
     target: Path,
     config: Config | None = None,
     rules_dir: Path | None = None,
+    baseline: set[tuple[str, str, int]] | None = None,
 ) -> ScanReport:
     """Scan ``target`` and return an aggregated :class:`ScanReport`.
 
-    Configuration is read from the nearest ``pyproject.toml`` unless an explicit
-    :class:`Config` is passed. ``rules_dir`` loads extra user-defined rules.
+    Configuration is read from the nearest ``pyproject.toml`` unless an
+    explicit :class:`Config` is passed. ``rules_dir`` loads extra user-defined
+    rules; ``baseline`` suppresses findings whose fingerprint already appears
+    in a previous scan (only new findings make it into the report).
+
     Never raises on bad input: unreadable or malformed files are recorded in
     ``ScanReport.skipped`` and scanning continues across the rest.
     """
@@ -92,6 +133,8 @@ def scan(
         for rule in rules:
             for finding in rule.check(workflow):
                 if _is_ignored(finding, directives):
+                    continue
+                if baseline is not None and _fingerprint(finding) in baseline:
                     continue
                 override = config.severity_overrides.get(finding.rule_id)
                 if override is not None:

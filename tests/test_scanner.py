@@ -1,8 +1,9 @@
 """Tests for the scan orchestrator."""
 
+import json
 from pathlib import Path
 
-from actionaudit.scanner import discover_workflows, scan
+from actionaudit.scanner import discover_workflows, load_baseline_fingerprints, scan
 
 
 def test_discover_single_file(fixtures_dir: Path) -> None:
@@ -67,3 +68,37 @@ def test_scan_includes_posture(fixtures_dir: Path) -> None:
     report = scan(fixtures_dir / "vulnerable")
     assert report.posture.total_workflows == len(report.scanned_files)
     assert report.posture.total_workflows > 0
+
+
+def test_load_baseline_fingerprints_parses_json_report(tmp_path: Path) -> None:
+    baseline_file = tmp_path / "baseline.json"
+    baseline_file.write_text(
+        json.dumps(
+            {
+                "findings": [
+                    {"rule_id": "rule-a", "workflow_path": "w.yml", "line": 5},
+                    {"rule_id": "rule-b", "workflow_path": "w.yml", "line": 10},
+                ]
+            }
+        ),
+        encoding="utf-8",
+    )
+    assert load_baseline_fingerprints(baseline_file) == {
+        ("rule-a", "w.yml", 5),
+        ("rule-b", "w.yml", 10),
+    }
+
+
+def test_load_baseline_fingerprints_missing_file(tmp_path: Path) -> None:
+    assert load_baseline_fingerprints(tmp_path / "nope.json") == set()
+
+
+def test_scan_with_baseline_suppresses_known_findings(fixtures_dir: Path) -> None:
+    target = fixtures_dir / "vulnerable" / "expression_injection.yml"
+    initial = scan(target)
+    assert initial.findings  # sanity: the fixture has findings
+    baseline = {
+        (f.rule_id, str(f.workflow_path), f.line) for f in initial.findings
+    }
+    rescan = scan(target, baseline=baseline)
+    assert rescan.findings == []

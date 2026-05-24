@@ -13,6 +13,7 @@ from actionaudit.models import ScanReport, Severity
 from actionaudit.profiles import PROFILES
 from actionaudit.reporters import github, html, json_reporter, sarif, terminal
 from actionaudit.rules import get_all_rules
+from actionaudit.scanner import load_baseline_fingerprints
 from actionaudit.scanner import scan as run_scan
 
 # Renderers that produce a string (terminal writes to the console directly).
@@ -77,6 +78,16 @@ def cli() -> None:
     default=None,
     help="Load configuration from a YAML policy file instead of pyproject.toml.",
 )
+@click.option(
+    "--baseline",
+    "baseline_path",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help=(
+        "Suppress findings already present in this JSON scan report; the run "
+        "reports only NEW findings (and --fail-on applies only to those)."
+    ),
+)
 def scan(
     path: Path,
     output_format: str,
@@ -85,6 +96,7 @@ def scan(
     rules_dir: Path | None,
     profile: str | None,
     policy: Path | None,
+    baseline_path: Path | None,
 ) -> None:
     """Scan PATH for GitHub Actions workflow security issues."""
     base = PROFILES[profile.lower()]() if profile else Config()
@@ -92,8 +104,11 @@ def scan(
         load_config_from_yaml(policy) if policy is not None else load_config(path)
     )
     config = merge(base, user_config)
+    baseline = (
+        load_baseline_fingerprints(baseline_path) if baseline_path is not None else None
+    )
 
-    report = run_scan(path, config=config, rules_dir=rules_dir)
+    report = run_scan(path, config=config, rules_dir=rules_dir, baseline=baseline)
     fmt = output_format.lower()
 
     if fmt == "terminal":

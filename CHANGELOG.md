@@ -4,6 +4,15 @@ All notable changes to ActionAudit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `--baseline <report.json>` suppresses findings already present in a previous
+  JSON scan report; the run reports only NEW findings and `--fail-on` applies
+  only to them. This is the missing piece for adopting ActionAudit on
+  brownfield repositories where the existing finding count must not break CI.
+
 ## [1.3.0] - 2026-05-21
 
 ### Added
