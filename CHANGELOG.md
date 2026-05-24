@@ -12,6 +12,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
   JSON scan report; the run reports only NEW findings and `--fail-on` applies
   only to them. This is the missing piece for adopting ActionAudit on
   brownfield repositories where the existing finding count must not break CI.
+- Lite taint analysis: a new rule `taint-propagation-via-env` (MEDIUM, total
+  14 rules) follows untrusted input through workflow / job / step `env`
+  blocks into shell variables consumed by `run` scripts -- catching
+  injections the direct expression-injection rule misses.
 
 ## [1.3.0] - 2026-05-21
 

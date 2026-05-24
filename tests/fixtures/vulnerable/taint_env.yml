@@ -1,0 +1,14 @@
+name: Taint Env
+on: pull_request
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      BRANCH: ${{ github.event.pull_request.head.ref }}
+    steps:
+      - run: |
+          git fetch origin $BRANCH
+          git checkout $BRANCH

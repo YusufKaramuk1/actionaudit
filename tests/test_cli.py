@@ -19,7 +19,7 @@ def test_list_rules_shows_every_rule() -> None:
     assert result.exit_code == 0
     assert "expression-injection-in-run" in result.output
     assert "hardcoded-secret" in result.output
-    assert "13 rule(s)" in result.output
+    assert "14 rule(s)" in result.output
 
 
 def test_explain_known_rule() -> None:

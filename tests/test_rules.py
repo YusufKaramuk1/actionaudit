@@ -15,6 +15,7 @@ from actionaudit.rules.inline_curl_pipe import InlineCurlPipeRule
 from actionaudit.rules.persist_credentials import PersistCredentialsRule
 from actionaudit.rules.pull_request_target import PullRequestTargetCheckoutRule
 from actionaudit.rules.self_hosted_runner import SelfHostedRunnerRule
+from actionaudit.rules.taint_propagation import TaintPropagationViaEnvRule
 from actionaudit.rules.unpinned_action import UnpinnedActionRule
 from actionaudit.rules.untrusted_artifact import UntrustedArtifactExecutionRule
 from actionaudit.rules.workflow_dispatch_input import WorkflowDispatchInputRule
@@ -36,6 +37,7 @@ def test_registry_discovers_all_rules() -> None:
         "dangerous-workflow-run-chain",
         "untrusted-artifact-execution",
         "actions-cache-poisoning-risk",
+        "taint-propagation-via-env",
     }
 
 
@@ -386,3 +388,28 @@ def test_cache_poisoning_ignores_safe_workflow(fixtures_dir: Path) -> None:
 def test_cache_poisoning_survives_broken_yaml(fixtures_dir: Path) -> None:
     wf = parse_workflow(fixtures_dir / "broken.yml")
     assert CachePoisoningRule().check(wf) == []
+
+
+# --- taint-propagation-via-env ---------------------------------------------
+
+
+def test_taint_propagation_flags_vulnerable_workflow(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "vulnerable" / "taint_env.yml")
+    findings = TaintPropagationViaEnvRule().check(wf)
+    assert len(findings) == 1
+    finding = findings[0]
+    assert finding.rule_id == "taint-propagation-via-env"
+    assert finding.severity.value == "MEDIUM"
+    # First `$BRANCH` reference inside the run block is on line 13.
+    assert finding.line == 13
+
+
+def test_taint_propagation_ignores_safe_workflow(fixtures_dir: Path) -> None:
+    # base.sha is not on the untrusted list; the env var is not tainted.
+    wf = parse_workflow(fixtures_dir / "safe" / "safe_taint.yml")
+    assert TaintPropagationViaEnvRule().check(wf) == []
+
+
+def test_taint_propagation_survives_broken_yaml(fixtures_dir: Path) -> None:
+    wf = parse_workflow(fixtures_dir / "broken.yml")
+    assert TaintPropagationViaEnvRule().check(wf) == []
