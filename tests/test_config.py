@@ -2,7 +2,7 @@
 
 from pathlib import Path
 
-from actionaudit.config import Config, load_config
+from actionaudit.config import Config, load_config, load_config_from_yaml, merge
 from actionaudit.models import Severity
 from actionaudit.scanner import scan
 
@@ -51,3 +51,37 @@ def test_scan_applies_severity_override(fixtures_dir: Path) -> None:
     report = scan(target, config=config)
     secret = next(f for f in report.findings if f.rule_id == "hardcoded-secret")
     assert secret.severity is Severity.CRITICAL
+
+
+def test_load_config_from_yaml(tmp_path: Path) -> None:
+    policy = tmp_path / "policy.yaml"
+    policy.write_text(
+        "disabled_rules:\n"
+        "  - bash-with-set-x\n"
+        "severity:\n"
+        "  hardcoded-secret: critical\n",
+        encoding="utf-8",
+    )
+    config = load_config_from_yaml(policy)
+    assert "bash-with-set-x" in config.disabled_rules
+    assert config.severity_overrides["hardcoded-secret"] is Severity.CRITICAL
+
+
+def test_load_config_from_yaml_malformed_returns_empty(tmp_path: Path) -> None:
+    policy = tmp_path / "broken.yaml"
+    policy.write_text("[not-valid-yaml\n", encoding="utf-8")
+    assert load_config_from_yaml(policy) == Config()
+
+
+def test_merge_unions_disabled_and_overrides_severity() -> None:
+    base = Config(
+        disabled_rules={"a"},
+        severity_overrides={"x": Severity.MEDIUM, "y": Severity.LOW},
+    )
+    override = Config(
+        disabled_rules={"b"},
+        severity_overrides={"y": Severity.HIGH},
+    )
+    result = merge(base, override)
+    assert result.disabled_rules == {"a", "b"}
+    assert result.severity_overrides == {"x": Severity.MEDIUM, "y": Severity.HIGH}

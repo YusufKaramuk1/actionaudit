@@ -54,3 +54,15 @@ def test_scan_fail_on_triggers_exit_1(fixtures_dir: Path) -> None:
     target = fixtures_dir / "vulnerable" / "hardcoded_secret.yml"
     result = CliRunner().invoke(cli, ["scan", str(target), "--fail-on", "high"])
     assert result.exit_code == 1
+
+
+def test_scan_education_profile_disables_set_x_rule(fixtures_dir: Path) -> None:
+    target = fixtures_dir / "vulnerable" / "set_x.yml"
+    result = CliRunner().invoke(
+        cli,
+        ["scan", str(target), "--profile", "education", "--format", "json"],
+    )
+    assert result.exit_code == 0
+    payload = json.loads(result.output)
+    rule_ids = {f["rule_id"] for f in payload["findings"]}
+    assert "bash-with-set-x" not in rule_ids

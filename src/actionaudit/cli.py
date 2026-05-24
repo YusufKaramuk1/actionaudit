@@ -8,7 +8,9 @@ import click
 from rich.console import Console
 
 from actionaudit import __version__
+from actionaudit.config import Config, load_config, load_config_from_yaml, merge
 from actionaudit.models import ScanReport, Severity
+from actionaudit.profiles import PROFILES
 from actionaudit.reporters import github, html, json_reporter, sarif, terminal
 from actionaudit.rules import get_all_rules
 from actionaudit.scanner import scan as run_scan
@@ -63,15 +65,35 @@ def cli() -> None:
     default=None,
     help="Load extra user-defined rule modules from this directory.",
 )
+@click.option(
+    "--profile",
+    type=click.Choice(list(PROFILES), case_sensitive=False),
+    default=None,
+    help="Apply a built-in configuration preset (strict / balanced / education).",
+)
+@click.option(
+    "--policy",
+    type=click.Path(exists=True, dir_okay=False, path_type=Path),
+    default=None,
+    help="Load configuration from a YAML policy file instead of pyproject.toml.",
+)
 def scan(
     path: Path,
     output_format: str,
     output_path: Path | None,
     fail_on: str | None,
     rules_dir: Path | None,
+    profile: str | None,
+    policy: Path | None,
 ) -> None:
     """Scan PATH for GitHub Actions workflow security issues."""
-    report = run_scan(path, rules_dir=rules_dir)
+    base = PROFILES[profile.lower()]() if profile else Config()
+    user_config = (
+        load_config_from_yaml(policy) if policy is not None else load_config(path)
+    )
+    config = merge(base, user_config)
+
+    report = run_scan(path, config=config, rules_dir=rules_dir)
     fmt = output_format.lower()
 
     if fmt == "terminal":

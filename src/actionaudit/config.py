@@ -1,4 +1,6 @@
-"""Configuration loaded from the [tool.actionaudit] table in pyproject.toml."""
+"""Configuration loaded from the [tool.actionaudit] table in pyproject.toml,
+from a ``--policy`` YAML file, or from a built-in ``--profile``.
+"""
 
 import sys
 from dataclasses import dataclass, field
@@ -9,6 +11,9 @@ if sys.version_info >= (3, 11):
     import tomllib
 else:  # Python 3.10 has no tomllib in the standard library.
     import tomli as tomllib
+
+from ruamel.yaml import YAML
+from ruamel.yaml.error import YAMLError
 
 from actionaudit.models import Severity
 
@@ -22,6 +27,22 @@ class Config:
 
     disabled_rules: set[str] = field(default_factory=set)
     severity_overrides: dict[str, Severity] = field(default_factory=dict)
+
+
+def merge(base: Config, override: Config) -> Config:
+    """Combine two configurations.
+
+    Disabled rules are unioned (anything disabled by either side stays
+    disabled); ``override`` wins for severity overrides so a user-provided
+    config always has the last word over a profile preset.
+    """
+    return Config(
+        disabled_rules=base.disabled_rules | override.disabled_rules,
+        severity_overrides={
+            **base.severity_overrides,
+            **override.severity_overrides,
+        },
+    )
 
 
 def _find_pyproject(start: Path) -> Path | None:
@@ -71,3 +92,20 @@ def load_config(start: Path) -> Config:
     if not isinstance(section, dict):
         return Config()
     return _parse_section(section)
+
+
+def load_config_from_yaml(path: Path) -> Config:
+    """Load a :class:`Config` from a standalone YAML policy file.
+
+    The file's top-level keys mirror the ``[tool.actionaudit]`` schema:
+    ``disabled_rules`` (list) and ``severity`` (mapping of rule id to severity).
+    Malformed input yields an empty Config rather than raising.
+    """
+    yaml = YAML(typ="safe")
+    try:
+        data = yaml.load(path.read_text(encoding="utf-8"))
+    except (OSError, YAMLError):
+        return Config()
+    if not isinstance(data, dict):
+        return Config()
+    return _parse_section(data)

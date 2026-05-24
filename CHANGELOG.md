@@ -4,6 +4,16 @@ All notable changes to ActionAudit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- `--profile strict|balanced|education` built-in configuration presets that
+  layer underneath any user configuration.
+- `--policy <file.yaml>` loads configuration from a standalone YAML policy
+  file (same schema as `[tool.actionaudit]` in pyproject.toml) -- a safe,
+  declarative alternative to `--rules-dir` that does not execute any code.
+
 ## [1.2.0] - 2026-05-21
 
 ### Added
