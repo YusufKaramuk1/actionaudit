@@ -57,12 +57,29 @@ actionaudit list-rules
 actionaudit explain expression-injection-in-run
 ```
 
+## Advanced usage
+
+```bash
+# Apply a built-in profile: strict / balanced / education
+actionaudit scan . --profile strict
+
+# Load configuration from a declarative YAML policy file (no code execution)
+actionaudit scan . --policy actionaudit-policy.yml
+
+# Brownfield adoption: capture a baseline, then fail only on NEW findings
+actionaudit scan . --format json --output baseline.json
+actionaudit scan . --baseline baseline.json --fail-on high
+```
+
+See **Configuration** and **Custom rules** below for the `--policy` schema and
+`--rules-dir`.
+
 ## Use as a GitHub Action
 
 Add ActionAudit to any repository's workflow:
 
 ```yaml
-- uses: YusufKaramuk1/actionaudit@v1.0.0
+- uses: YusufKaramuk1/actionaudit@v1.4.0
   with:
     path: .github/workflows
     fail-on: high
@@ -78,7 +95,7 @@ Add ActionAudit to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/YusufKaramuk1/actionaudit
-    rev: v1.0.0
+    rev: v1.4.0
     hooks:
       - id: actionaudit
 ```
@@ -93,10 +110,14 @@ HIGH-or-above finding (override with `args: ['--fail-on', 'critical']`).
 | `expression-injection-in-run` | CRITICAL | CICD-SEC-4 | Untrusted `${{ ... }}` input interpolated into a `run:` script |
 | `pull-request-target-with-checkout` | CRITICAL | CICD-SEC-4 | `pull_request_target` workflow checking out PR head code (Pwn Request) |
 | `workflow-dispatch-input-injection` | HIGH | CICD-SEC-4 | Workflow input interpolated into a `run:` script |
+| `dangerous-workflow-run-chain` | HIGH | CICD-SEC-4 | `workflow_run` workflow consuming an upstream workflow's artifacts |
+| `untrusted-artifact-execution` | HIGH | CICD-SEC-3 | A downloaded artifact executed in the same job without verification |
 | `github-token-write-all` | HIGH | CICD-SEC-5 | `permissions: write-all` or no `permissions:` block |
 | `third-party-action-not-pinned-sha` | HIGH | CICD-SEC-3 | Third-party action pinned to a mutable tag instead of a commit SHA |
 | `hardcoded-secret` | HIGH | CICD-SEC-6 | Literal credential (AWS / GitHub / Stripe / Slack / PEM) in the file |
 | `inline-curl-pipe-bash` | MEDIUM | CICD-SEC-3 | Remote script piped straight into a shell |
+| `actions-cache-poisoning-risk` | MEDIUM | CICD-SEC-3 | Cache key derived from PR-controlled input |
+| `taint-propagation-via-env` | MEDIUM | CICD-SEC-4 | Untrusted input reaching a `run:` shell via `env` (unquoted / eval) |
 | `persist-credentials-default-true` | MEDIUM | CICD-SEC-6 | `actions/checkout` keeping the default credential persistence |
 | `self-hosted-runner-fork-trigger` | MEDIUM | CICD-SEC-7 | Self-hosted runner reachable by forked pull requests |
 | `bash-with-set-x` | LOW | CICD-SEC-10 | Shell debug tracing (`set -x`) that can leak secrets into logs |
@@ -173,10 +194,12 @@ cd actionaudit && pip install -e .
 actionaudit scan .
 ```
 
-Şu an 10 kural içerir ve her biri OWASP Top 10 CI/CD risk kategorilerinden
-biriyle eşleştirilmiştir. Çıktı biçimleri: terminal, JSON, koyu temalı HTML ve
-SARIF. Bulgular `pyproject.toml` içindeki `[tool.actionaudit]` bölümünden veya
-satır içi `# actionaudit: ignore` yorumlarıyla bastırılabilir.
+Şu an 14 kural içerir ve her biri OWASP Top 10 CI/CD risk kategorilerinden
+biriyle eşleştirilmiştir. Çıktı biçimleri: terminal, JSON, koyu temalı HTML,
+SARIF ve GitHub annotation'ları. Yapılandırma `pyproject.toml`'daki
+`[tool.actionaudit]` bölümünden, `--profile` / `--policy` ile veya satır içi
+`# actionaudit: ignore` yorumlarıyla yapılır; `--baseline` ile yalnızca yeni
+bulgular raporlanabilir.
 
 ## License
 
