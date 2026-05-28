@@ -4,6 +4,25 @@ All notable changes to ActionAudit are documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/),
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+
+- `taint-propagation-via-env` is now quote-aware: a safely double-quoted use
+  such as `echo "$VAR"` is no longer flagged. Only unquoted uses and
+  eval-style sinks (`eval`, `bash -c`, `sh -c`, `python -c`, `node -e`) are
+  reported. This removes a false positive on the GitHub-recommended pattern
+  of moving untrusted input into env (and `examples/safe-ci.yml` is clean
+  again).
+- `taint-propagation-via-env` now also tracks `inputs.*` /
+  `github.event.inputs.*` as taint sources, catching workflow inputs that
+  reach a run step through env.
+
+### Changed
+
+- README refreshed for v1.4: 14-rule table, v1.4.0 usage references, and an
+  "Advanced usage" section covering `--profile`, `--policy`, and `--baseline`.
+
 ## [1.4.0] - 2026-05-21
 
 ### Added

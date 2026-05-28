@@ -1,0 +1,17 @@
+name: Taint Inputs
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      TARGET: ${{ inputs.target }}
+    steps:
+      - run: ./deploy.sh $TARGET

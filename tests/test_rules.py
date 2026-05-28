@@ -404,10 +404,20 @@ def test_taint_propagation_flags_vulnerable_workflow(fixtures_dir: Path) -> None
     assert finding.line == 13
 
 
-def test_taint_propagation_ignores_safe_workflow(fixtures_dir: Path) -> None:
-    # base.sha is not on the untrusted list; the env var is not tainted.
+def test_taint_propagation_ignores_safely_quoted_use(fixtures_dir: Path) -> None:
+    # The env var is tainted, but the run step uses it only double-quoted, so
+    # there is no injection -- the rule must not flag it (this is the
+    # GitHub-recommended pattern and must not be a false positive).
     wf = parse_workflow(fixtures_dir / "safe" / "safe_taint.yml")
     assert TaintPropagationViaEnvRule().check(wf) == []
+
+
+def test_taint_propagation_flags_inputs_through_env(fixtures_dir: Path) -> None:
+    # inputs.* must be tracked as a taint source, not just github.event.*.
+    wf = parse_workflow(fixtures_dir / "vulnerable" / "taint_inputs.yml")
+    findings = TaintPropagationViaEnvRule().check(wf)
+    assert len(findings) == 1
+    assert findings[0].rule_id == "taint-propagation-via-env"
 
 
 def test_taint_propagation_survives_broken_yaml(fixtures_dir: Path) -> None:
