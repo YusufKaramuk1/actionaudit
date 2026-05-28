@@ -79,7 +79,7 @@ See **Configuration** and **Custom rules** below for the `--policy` schema and
 Add ActionAudit to any repository's workflow:
 
 ```yaml
-- uses: YusufKaramuk1/actionaudit@v1.4.0
+- uses: YusufKaramuk1/actionaudit@v1.4.1
   with:
     path: .github/workflows
     fail-on: high
@@ -95,7 +95,7 @@ Add ActionAudit to `.pre-commit-config.yaml`:
 ```yaml
 repos:
   - repo: https://github.com/YusufKaramuk1/actionaudit
-    rev: v1.4.0
+    rev: v1.4.1
     hooks:
       - id: actionaudit
 ```
